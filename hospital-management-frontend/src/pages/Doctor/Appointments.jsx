@@ -510,6 +510,24 @@ const DoctorAppointments = () => {
       );
     }
 
+    // Sort appointments by date and time if we're in the upcoming tab
+    if (tab === "upcoming") {
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.appointmentDate || a.date);
+        const dateB = new Date(b.appointmentDate || b.date);
+        
+        // Compare dates first
+        if (dateA.getTime() !== dateB.getTime()) {
+          return dateA.getTime() - dateB.getTime();
+        }
+        
+        // If dates are the same, compare times
+        const timeA = a.time || a.displayTime || "00:00";
+        const timeB = b.time || b.displayTime || "00:00";
+        return timeA.localeCompare(timeB);
+      });
+    }
+
     return filtered;
   };
 
@@ -626,8 +644,7 @@ const DoctorAppointments = () => {
     try {
       showLoading();
       const response = await doctor.updateAppointment(appointment.id, {
-        ...appointment,
-        status: 1, // 1 represents completed in the enum
+        status: "Completed", // Match the enum value exactly
         notes: appointment.notes || ""
       });
 

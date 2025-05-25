@@ -75,9 +75,9 @@ namespace HospitalManagement.API.Controllers
                 .Include(a => a.Patient)
                     .ThenInclude(p => p.User)
                 .Select(a => new
-                {
-                    a.Id,
+                {                    a.Id,
                     a.AppointmentDate,
+                    a.DisplayTime,
                     a.Status,
                     a.Notes,
                     DoctorId = a.DoctorId,

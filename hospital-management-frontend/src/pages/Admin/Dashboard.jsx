@@ -116,9 +116,9 @@ const Dashboard = () => {
                   {new Date(dashboardData.recentAppointments[0].date).toLocaleDateString()}
                 </div>
                 <div className="appointment-details">
-                  <strong>Patient:</strong> {dashboardData.recentAppointments[0].patientName}
-                  <br />
-                  <strong>Doctor:</strong> Dr. {dashboardData.recentAppointments[0].doctorName}
+                  <strong>Patient: {dashboardData.recentAppointments[0].patientName}</strong> 
+                 
+                  <strong>Doctor: Dr. {dashboardData.recentAppointments[0].doctorName}</strong> 
                   
                 </div>
               </div>
@@ -142,10 +142,10 @@ const Dashboard = () => {
                   {dashboardData.recentPatients[0].firstName} {dashboardData.recentPatients[0].lastName}
                 </div>
                 <div className="patient-details">
-                  <strong>Gender:</strong> {dashboardData.recentPatients[0].gender}
-                  <br />
+                  <strong>Gender: {dashboardData.recentPatients[0].gender}</strong> 
                   
-                  <strong>Last Visit:</strong> {dashboardData.recentPatients[0].lastVisit ? new Date(dashboardData.recentPatients[0].lastVisit).toLocaleDateString() : 'N/A'}
+                  
+                  <strong>Last Visit: {dashboardData.recentPatients[0].lastVisit ? new Date(dashboardData.recentPatients[0].lastVisit).toLocaleDateString() : 'N/A'}</strong> 
                 </div>
               </div>
             ) : (

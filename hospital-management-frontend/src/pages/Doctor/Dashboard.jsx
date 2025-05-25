@@ -326,17 +326,17 @@ const DoctorDashboard = () => {
                         const appointmentDate = new Date(appointment.date);
                         const today = new Date();
                         return (
-                          appointmentDate.getFullYear() ===
-                            today.getFullYear() &&
+                          appointmentDate.getFullYear() === today.getFullYear() &&
                           appointmentDate.getMonth() === today.getMonth() &&
-                          appointmentDate.getDate() === today.getDate()
+                          appointmentDate.getDate() === today.getDate() &&
+                          appointment.status === 0 // Only show scheduled appointments (status 0)
                         );
                       } catch (e) {
                         return false;
                       }
                     }).length || 0}
                   </span>
-                  <span className="stat-label">Today's Appointments</span>
+                  <span className="stat-label">Today's Scheduled Appointments</span>
                 </div>
               </div>
 
@@ -394,42 +394,42 @@ const DoctorDashboard = () => {
                 // Filter today's appointments
                 const todayAppointments = dashboardData.appointments
                   .filter((appointment) => {
-                    // Ensure appointment.date is a valid date string
-                    if (
-                      !appointment.date ||
-                      typeof appointment.date !== "string"
-                    ) {
+                    // Try to get a valid date from either appointmentDate or date field
+                    const dateToUse = appointment.appointmentDate || appointment.date;
+                    
+                    if (!dateToUse) {
                       console.warn(
-                        "Dashboard: Skipping appointment due to invalid date:",
+                        "Dashboard: Skipping appointment due to missing date:",
                         appointment
                       );
                       return false;
                     }
 
                     try {
-                      const appointmentDate = new Date(appointment.date);
+                      const appointmentDate = new Date(dateToUse);
                       const today = new Date();
 
-                      // Compare year, month, and day only
+                      // Compare year, month, and day only, and check for scheduled status (0)
                       return (
                         appointmentDate.getFullYear() === today.getFullYear() &&
                         appointmentDate.getMonth() === today.getMonth() &&
-                        appointmentDate.getDate() === today.getDate()
+                        appointmentDate.getDate() === today.getDate() &&
+                        appointment.status === 0 // Only show scheduled appointments
                       );
                     } catch (e) {
                       console.error(
                         "Dashboard: Error parsing appointment date:",
-                        appointment.date,
+                        dateToUse,
                         e
                       );
                       return false; // Filter out appointments with invalid dates
                     }
                   })
-                  // Sort appointments by time
+                  // Sort appointments by display time or appointment date
                   .sort((a, b) => {
-                    if (!a.time) return 1;
-                    if (!b.time) return -1;
-                    return a.time.localeCompare(b.time);
+                    const timeA = a.displayTime || a.time || new Date(a.appointmentDate).toLocaleTimeString();
+                    const timeB = b.displayTime || b.time || new Date(b.appointmentDate).toLocaleTimeString();
+                    return timeA.localeCompare(timeB);
                   });
 
                 if (todayAppointments.length > 0) {
@@ -441,26 +441,28 @@ const DoctorDashboard = () => {
                       </div>
                       <ul className="appointment-list">
                         {todayAppointments.map((appointment) => {
-                          // Format the patient name
+                          // Format the patient name with comprehensive fallbacks
                           const patientName =
                             appointment.patientName ||
-                            (appointment.patient
-                              ? appointment.patient.name ||
-                                `${appointment.patient.firstName || ""} ${
-                                  appointment.patient.lastName || ""
-                                }`.trim()
-                              : "Unknown Patient");
+                            (appointment.patient?.user?.username) ||
+                            (appointment.patient?.user?.name) ||
+                            (appointment.patient?.name) ||
+                            `${appointment.patient?.firstName || ""} ${
+                              appointment.patient?.lastName || ""
+                            }`.trim() ||
+                            "Unknown Patient";
 
-                          // Format time display
-                          const timeDisplay = appointment.time
-                            ? new Date(
-                                `2000-01-01T${appointment.time}`
-                              ).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: true,
-                              })
-                            : "N/A";
+                          // Format time display with proper fallbacks
+                          const timeDisplay = 
+                            appointment.displayTime ||
+                            appointment.time ||
+                            (appointment.appointmentDate
+                              ? new Date(appointment.appointmentDate).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })
+                              : "N/A");
 
                           return (
                             <li
@@ -469,6 +471,9 @@ const DoctorDashboard = () => {
                             >
                               <div className="appointment-info">
                                 <strong>Patient:</strong> {patientName}
+                                <br />
+                                <strong>Date:</strong>{" "}
+                                {new Date(appointment.appointmentDate || appointment.date).toLocaleDateString()}
                                 <br />
                                 <strong>Time:</strong> {timeDisplay}
                                 <br />
@@ -551,14 +556,17 @@ const DoctorDashboard = () => {
                     return (
                       <li key={patient.id} className="patient-item">
                         <div className="patient-info">
-                          <p>
-                            <strong>Name:</strong>
-                            {patientName}
-                          </p>
-                          <p>
-                            <strong>Email:</strong>
-                            {patientEmail}
-                          </p>
+                          
+                            <ul>
+                              <li>
+                                <strong>Name:</strong> {patientName}
+                              </li>
+                              <li>
+                                <strong>Email:</strong> {patientEmail}
+                              </li>
+                            </ul>
+                            
+                          
                         </div>
                       </li>
                     );
@@ -598,7 +606,7 @@ const DoctorDashboard = () => {
               (() => {
                 const now = new Date();
                 const upcomingAppointments = dashboardData.appointments
-                  .filter((appointment) => appointment.status !== 2) // Exclude cancelled appointments
+                  .filter((appointment) => appointment.status !== 2 && appointment.status !== 1) // Exclude cancelled appointments
                   .sort(
                     (a, b) =>
                       new Date(a.appointmentDate) - new Date(b.appointmentDate)

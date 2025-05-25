@@ -189,11 +189,11 @@
 
 /* Latest item styles */
 .latest-item {
-  background: #f8f9fa;
+  
   border-radius: 8px;
   padding: 1.25rem;
   transition: all 0.2s ease;
-  border-left: 4px solid #3498db;
+  
   margin-bottom: 1rem;
 }
 

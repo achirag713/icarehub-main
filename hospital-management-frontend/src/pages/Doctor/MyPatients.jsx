@@ -135,8 +135,8 @@ const MyPatients = () => {
                   </div>
                 </div>                <div className="patient-details">
                   <div className="detail-row">
-                    <span className="detail-label">Age:</span>
-                    <span>{calculateAge(patient.dateOfBirth)}</span>
+                    <span className="detail-label">DOB:</span>
+                    <span>{patient.dateOfBirth.split('T')[0]}</span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Gender:</span>
@@ -151,11 +151,7 @@ const MyPatients = () => {
                     <span>{patient.email || '-'}</span>
                   </div>
                 </div>
-                <div className="patient-actions">
-                  <button className="btn-view" onClick={() => handleViewPatient(patient.id)}>
-                    View Details
-                  </button>
-                </div>
+                
                 
               </div>
             ))}

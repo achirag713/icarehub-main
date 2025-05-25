@@ -396,11 +396,8 @@ Description: ${appointmentBill.description}`;
                     {appointment.appointmentDate ? 
                       new Date(appointment.appointmentDate).toLocaleDateString() : 
                       'Not scheduled'}
-                  </td>
-                  <td>
-                    {appointment.appointmentDate ? 
-                      new Date(appointment.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 
-                      'Not specified'}
+                  </td>                  <td>
+                    {appointment.displayTime || 'Not specified'}
                   </td>
                   <td>{appointment.patientName || 'Unknown'}</td>
                   <td>{appointment.doctorName ? `Dr. ${appointment.doctorName}` : 'Not assigned'}</td>
@@ -504,10 +501,10 @@ Description: ${appointmentBill.description}`;
                 </div>
                 <div className="form-group">
                   <label>Time</label>
-                  <input
-                    type="time"
+                  <input                    type="text"
                     value={formData.displayTime}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, displayTime: e.target.value })}
+                    placeholder="Enter time (e.g., 10:00 AM)"
                     required
                   />
                 </div>

@@ -28,16 +28,38 @@ namespace HospitalManagement.API.Controllers
             _logger = logger;
         }
 
+        private async Task<int> GetUserIdFromClaims()
+        {
+            var userIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdValue))
+            {
+                throw new UnauthorizedAccessException("User ID not found");
+            }
+
+            if (!int.TryParse(userIdValue, out int userId))
+            {
+                throw new UnauthorizedAccessException("Invalid User ID format");
+            }
+
+            // Do some async validation to make this properly async
+            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+            {
+                throw new UnauthorizedAccessException("User not found");
+            }
+
+            return userId;
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAllDoctors()
         {
             var doctors = await _context.Doctors
                 .Include(d => d.User)
-                .Select(d => new
-                {
+                .Select(d => new {
                     d.Id,
-                    d.User.Username,
-                    d.User.Email,
+                    Username = d.User != null ? d.User.Username : "Unknown",
+                    Email = d.User != null ? d.User.Email : string.Empty,
                     d.Specialization,
                     d.LicenseNumber,
                     d.PhoneNumber,
@@ -55,11 +77,10 @@ namespace HospitalManagement.API.Controllers
                 .Include(d => d.User)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
-            if (doctor == null)
+            if (doctor == null || doctor.User == null)
                 return NotFound();
 
-            return Ok(new
-            {
+            return Ok(new {
                 doctor.Id,
                 doctor.User.Username,
                 doctor.User.Email,
@@ -113,8 +134,8 @@ namespace HospitalManagement.API.Controllers
                         {
                             Doctor = doctor,
                             DayOfWeek = day,
-                            StartTime = new TimeSpan(9, 0, 0), // 9 AM
-                            EndTime = new TimeSpan(17, 0, 0)   // 5 PM
+                            StartTime = new TimeSpan(9, 0, 0),
+                            EndTime = new TimeSpan(17, 0, 0)
                         });
                     }
                 }
@@ -136,11 +157,10 @@ namespace HospitalManagement.API.Controllers
                 _context.Doctors.Add(doctor);
                 await _context.SaveChangesAsync();
 
-                // Return a simplified object to avoid circular reference issues
                 return CreatedAtAction(nameof(GetDoctor), new { id = doctor.Id }, new {
                     id = doctor.Id,
-                    username = doctor.User.Username,
-                    email = doctor.User.Email,
+                    username = user.Username,
+                    email = user.Email,
                     specialization = doctor.Specialization,
                     licenseNumber = doctor.LicenseNumber,
                     phoneNumber = doctor.PhoneNumber,
@@ -149,11 +169,7 @@ namespace HospitalManagement.API.Controllers
             }
             catch (Exception ex)
             {
-                // Log error details
-                Console.WriteLine($"Error creating doctor: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
-                
-                // Return error details
+                _logger.LogError(ex, "Error creating doctor");
                 return StatusCode(500, new { message = "An error occurred while creating the doctor", details = ex.Message });
             }
         }
@@ -162,39 +178,44 @@ namespace HospitalManagement.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateDoctor(int id, [FromBody] UpdateDoctorDto dto)
         {
-            var doctor = await _context.Doctors
-                .Include(d => d.User)
-                .FirstOrDefaultAsync(d => d.Id == id);
-
-            if (doctor == null)
-                return NotFound();
-
-            if (doctor.User != null)
+            try
             {
+                var doctor = await _context.Doctors
+                    .Include(d => d.User)
+                    .FirstOrDefaultAsync(d => d.Id == id);
+
+                if (doctor == null || doctor.User == null)
+                    return NotFound();
+
+                // Update user fields
                 doctor.User.Username = dto.Username;
                 doctor.User.Email = dto.Email;
+
+                // Update doctor fields
+                doctor.Specialization = dto.Specialization;
+                doctor.LicenseNumber = dto.LicenseNumber;
+                doctor.PhoneNumber = dto.PhoneNumber;
+                doctor.Address = dto.Address;
+                doctor.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new {
+                    id = doctor.Id,
+                    username = doctor.User.Username,
+                    email = doctor.User.Email,
+                    specialization = doctor.Specialization,
+                    licenseNumber = doctor.LicenseNumber,
+                    phoneNumber = doctor.PhoneNumber,
+                    address = doctor.Address,
+                    message = "Doctor updated successfully"
+                });
             }
-
-            doctor.User.Username = dto.Username;
-            doctor.Specialization = dto.Specialization;
-            doctor.LicenseNumber = dto.LicenseNumber;
-            doctor.PhoneNumber = dto.PhoneNumber;
-            doctor.Address = dto.Address;
-            doctor.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new // Consider returning a DTO or a specific success message instead of the full entity
-    {
-        id = doctor.Id,
-        username = doctor.User?.Username, // Use null-conditional operator
-        email = doctor.User?.Email,       // Use null-conditional operator
-        specialization = doctor.Specialization,
-        licenseNumber = doctor.LicenseNumber,
-        phoneNumber = doctor.PhoneNumber,
-        address = doctor.Address,
-        message = "Doctor updated successfully" // Added a success message
-    });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating doctor");
+                return StatusCode(500, "An error occurred while updating the doctor");
+            }
         }
 
         [Authorize(Roles = "Admin")]
@@ -205,7 +226,7 @@ namespace HospitalManagement.API.Controllers
                 .Include(d => d.User)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
-            if (doctor == null)
+            if (doctor == null || doctor.User == null)
                 return NotFound();
 
             _context.Doctors.Remove(doctor);
@@ -229,8 +250,8 @@ namespace HospitalManagement.API.Controllers
                 .Select(d => new
                 {
                     d.Id,
-                    Name = d.User.Username,
-                    d.User.Email,
+                    Name = d.User != null ? d.User.Username : "Unknown",
+                    Email = d.User != null ? d.User.Email : string.Empty,
                     d.Specialization,
                     d.LicenseNumber,
                     d.PhoneNumber,
@@ -245,72 +266,78 @@ namespace HospitalManagement.API.Controllers
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> GetProfile()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var doctor = await _context.Doctors
-                .Include(d => d.User)
-                .FirstOrDefaultAsync(d => d.UserId == userId);
-
-            if (doctor == null)
+            try
             {
-                return NotFound("Doctor not found");
+                int userId = await GetUserIdFromClaims();
+                var doctor = await _context.Doctors
+                    .Include(d => d.User)
+                    .FirstOrDefaultAsync(d => d.UserId == userId);
+
+                if (doctor == null || doctor.User == null)
+                {
+                    return NotFound("Doctor not found");
+                }
+
+                return Ok(new {
+                    id = doctor.Id,
+                    name = doctor.User.Username,
+                    email = doctor.User.Email,
+                    specialization = doctor.Specialization,
+                    licenseNumber = doctor.LicenseNumber,
+                    phoneNumber = doctor.PhoneNumber,
+                    address = doctor.Address
+                });
             }
-
-            return Ok(new
+            catch (UnauthorizedAccessException ex)
             {
-                id = doctor.Id,
-                name = doctor.User.Username,
-                email = doctor.User.Email,
-                specialization = doctor.Specialization,
-                licenseNumber = doctor.LicenseNumber,
-                phoneNumber = doctor.PhoneNumber,
-                address = doctor.Address
-            });
+                return Unauthorized(ex.Message);
+            }
         }
 
         [HttpPut("profile")]
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> UpdateProfile([FromBody] DoctorProfileUpdateDto model)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var doctor = await _context.Doctors
-                .Include(d => d.User)
-                .FirstOrDefaultAsync(d => d.UserId == userId);
-
-            if (doctor == null)
+            try
             {
-                return NotFound("Doctor not found");
+                int userId = await GetUserIdFromClaims();
+                var doctor = await _context.Doctors
+                    .Include(d => d.User)
+                    .FirstOrDefaultAsync(d => d.UserId == userId);
+
+                if (doctor == null || doctor.User == null)
+                {
+                    return NotFound("Doctor not found");
+                }
+
+                // Update only allowed fields
+                doctor.User.Username = model.Name;
+                doctor.User.Email = model.Email;
+                doctor.PhoneNumber = model.PhoneNumber;
+                doctor.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new {
+                    id = doctor.Id,
+                    name = doctor.User.Username,
+                    email = doctor.User.Email,
+                    specialization = doctor.Specialization,
+                    licenseNumber = doctor.LicenseNumber,
+                    phoneNumber = doctor.PhoneNumber,
+                    address = doctor.Address,
+                    message = "Profile updated successfully"
+                });
             }
-
-            // Update only allowed fields: Name, Email, Phone Number
-            if (doctor.User != null)
+            catch (UnauthorizedAccessException ex)
             {
-                doctor.User.Username = model.Name; // Map Name from DTO to Username in User entity
-                doctor.User.Email = model.Email; // Update Email
+                return Unauthorized(ex.Message);
             }
-
-            doctor.PhoneNumber = model.PhoneNumber; // Update Phone Number directly on Doctor entity
-
-            // Specialization, LicenseNumber, Address are NOT updated by the doctor
-            // doctor.Specialization = model.Specialization; // Removed
-            // doctor.LicenseNumber = model.LicenseNumber; // Removed
-            // doctor.Address = model.Address; // Removed
-
-            doctor.UpdatedAt = DateTime.UtcNow;
-
-            await _context.SaveChangesAsync();
-
-            // Return updated profile data or a success message
-            return Ok(new
+            catch (Exception ex)
             {
-                id = doctor.Id,
-                name = doctor.User?.Username, // Use null-conditional operator
-                email = doctor.User?.Email,       // Use null-conditional operator
-                specialization = doctor.Specialization, // Include for display, but not updated here
-                licenseNumber = doctor.LicenseNumber,   // Include for display, but not updated here
-                phoneNumber = doctor.PhoneNumber,
-                address = doctor.Address, // Include for display, but not updated here
-                message = "Profile updated successfully"
-            });
+                _logger.LogError(ex, "Error updating doctor profile");
+                return StatusCode(500, "An error occurred while updating the profile");
+            }
         }
         
         [HttpGet("patients/{id}")]
@@ -321,7 +348,7 @@ public async Task<IActionResult> GetPatientById(int id)
     {
         _logger.LogInformation($"GetPatientById called for patient ID: {id}");
         
-        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        var userId = await GetUserIdFromClaims();
         var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
         
         if (doctor == null)
@@ -357,13 +384,13 @@ public async Task<IActionResult> GetPatientById(int id)
         
         return Ok(new {
             id = patient.Id,
-            name = patient.User.Username, // This is the key property the frontend is looking for
-            email = patient.User.Email,
-            phoneNumber = patient.PhoneNumber,
-            gender = patient.Gender,
+            name = patient.User?.Username ?? "Unknown Patient", // Handle possible null User
+            email = patient.User?.Email ?? string.Empty,
+            phoneNumber = patient.PhoneNumber ?? string.Empty,
+            gender = patient.Gender ?? string.Empty,
             dateOfBirth = patient.DateOfBirth,
-            address = patient.Address,
-            bloodGroup = patient.BloodGroup
+            address = patient.Address ?? string.Empty,
+            bloodGroup = patient.BloodGroup ?? string.Empty
         });
     }
     catch (Exception ex)
@@ -377,47 +404,66 @@ public async Task<IActionResult> GetPatientById(int id)
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> GetDoctorPatients()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
-            
-            if (doctor == null)
+            try 
             {
-                return NotFound("Doctor not found");
+                int userId = await GetUserIdFromClaims();
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
+                
+                if (doctor == null)
+                {
+                    return NotFound("Doctor not found");
+                }
+                
+                var appointments = await _context.Appointments
+                    .Where(a => a.DoctorId == doctor.Id)
+                    .Include(a => a.Patient)
+                        .ThenInclude(p => p.User)
+                    .ToListAsync();
+
+                var relationships = await _context.DoctorPatientRelationships
+                    .Where(dp => dp.DoctorId == doctor.Id)
+                    .Include(dp => dp.Patient)
+                        .ThenInclude(p => p.User)
+                    .ToListAsync();
+                    
+                // Process the data in memory where we can safely handle nulls
+                var patientsFromAppointments = appointments
+                    .Where(a => a.Patient != null && a.Patient.User != null)
+                    .Select(a => a.Patient)
+                    .Distinct();
+                    
+                var patientsFromRelationships = relationships
+                    .Where(r => r.Patient != null && r.Patient.User != null)
+                    .Select(r => r.Patient)
+                    .Distinct();
+
+                // Combine and process all patients
+                var allPatients = patientsFromAppointments
+                    .Union(patientsFromRelationships, new PatientComparer())
+                    .Select(p => new {
+                        id = p!.Id, // We know p is not null due to the Where clause above
+                        name = p.User!.Username ?? "Unknown Patient", // We know User is not null
+                        email = p.User.Email ?? string.Empty,
+                        phoneNumber = p.PhoneNumber ?? string.Empty,
+                        gender = p.Gender ?? string.Empty,
+                        dateOfBirth = p.DateOfBirth,
+                        address = p.Address ?? string.Empty,
+                        bloodGroup = p.BloodGroup ?? string.Empty,
+                        medicalHistory = p.MedicalHistory ?? string.Empty
+                    })
+                    .ToList();
+                
+                return Ok(allPatients);
             }
-            
-            // Get patients from appointments
-            var patientsFromAppointments = await _context.Appointments
-                .Where(a => a.DoctorId == doctor.Id)
-                .Select(a => a.Patient)
-                .Distinct()
-                .Include(p => p.User)
-                .ToListAsync();
-                
-            // Get patients from doctor-patient relationships
-            var patientsFromRelationships = await _context.DoctorPatientRelationships
-                .Where(dp => dp.DoctorId == doctor.Id)
-                .Include(dp => dp.Patient)
-                    .ThenInclude(p => p.User)
-                .Select(dp => dp.Patient)
-                .ToListAsync();
-                
-            // Combine and deduplicate
-            var allPatients = patientsFromAppointments
-                .Union(patientsFromRelationships, new PatientComparer())
-                .Select(p => new {
-                    id = p.Id,
-                    name = p.User.Username,
-                    email = p.User.Email,
-                    phoneNumber = p.PhoneNumber,
-                    gender = p.Gender,
-                    dateOfBirth = p.DateOfBirth,
-                    address = p.Address,
-                    bloodGroup = p.BloodGroup,
-                    medicalHistory = p.MedicalHistory
-                })
-                .ToList();
-            
-            return Ok(allPatients);
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized("Invalid user authentication");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetDoctorPatients");
+                return StatusCode(500, "An error occurred while fetching patients");
+            }
         }
 
         [HttpGet("appointments")]
@@ -457,12 +503,42 @@ public async Task<IActionResult> GetPatientById(int id)
 
                 _logger.LogInformation($"Found doctor with ID: {doctor.Id}");
 
-                // Get appointments for this doctor
+                // Get appointments for this doctor with full patient details
                 var appointments = await _context.Appointments
-                    .Include(a => a.Patient)
                     .Where(a => a.DoctorId == doctor.Id)
-                    .OrderByDescending(a => a.AppointmentDate)
-                    .ToListAsync();
+                    .Include(a => a.Patient)
+                        .ThenInclude(p => p!.User)
+                    .Include(a => a.Doctor)
+                        .ThenInclude(d => d!.User)
+                    .Select(a => new {
+                        Id = a.Id,
+                        AppointmentDate = a.AppointmentDate,
+                        DisplayTime = string.IsNullOrEmpty(a.DisplayTime) ? a.AppointmentDate.ToString("h:mm tt") : a.DisplayTime,
+                        Status = (int)a.Status,
+                        Reason = string.IsNullOrEmpty(a.Reason) ? string.Empty : a.Reason,
+                        PatientId = a.PatientId,
+                        PatientName = (a.Patient != null && a.Patient.User != null) 
+                    ? string.IsNullOrEmpty(a.Patient.User.Username) ? "Unknown Patient" : a.Patient.User.Username 
+                    : "Unknown Patient",
+                PatientEmail = (a.Patient != null && a.Patient.User != null) 
+                    ? string.IsNullOrEmpty(a.Patient.User.Email) ? string.Empty : a.Patient.User.Email 
+                    : string.Empty,
+                PatientPhone = (a.Patient != null) 
+                    ? string.IsNullOrEmpty(a.Patient.PhoneNumber) ? string.Empty : a.Patient.PhoneNumber 
+                    : string.Empty,
+                Notes = string.IsNullOrEmpty(a.Notes) ? string.Empty : a.Notes,
+                Doctor = new {
+                    Id = a.Doctor != null ? a.Doctor.Id : doctor.Id,
+                    Name = (a.Doctor != null && a.Doctor.User != null)
+                        ? string.IsNullOrEmpty(a.Doctor.User.Username) ? "Unknown Doctor" : a.Doctor.User.Username
+                        : "Unknown Doctor",
+                    Specialization = a.Doctor != null 
+                        ? string.IsNullOrEmpty(a.Doctor.Specialization) ? string.Empty : a.Doctor.Specialization 
+                        : string.Empty
+                }
+            })
+            .OrderByDescending(a => a.AppointmentDate)
+            .ToListAsync();
 
                 _logger.LogInformation($"Found {appointments.Count} appointments for doctor {doctor.Id}");
 
@@ -479,47 +555,61 @@ public async Task<IActionResult> GetPatientById(int id)
         [Authorize(Roles = "Doctor")]
         public async Task<IActionResult> GetPatientMedicalRecords(int patientId)
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
-            
-            if (doctor == null)
+            try
             {
-                return NotFound("Doctor not found");
-            }
-            
-            // Check if doctor has access to this patient's records
-            var hasAccess = await _context.Appointments
-                .AnyAsync(a => a.DoctorId == doctor.Id && a.PatientId == patientId);
+                int userId = await GetUserIdFromClaims();
+                var doctor = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == userId);
                 
-            if (!hasAccess)
-            {
-                var relationship = await _context.DoctorPatientRelationships
-                    .AnyAsync(dp => dp.DoctorId == doctor.Id && dp.PatientId == patientId);
-                    
-                if (!relationship)
+                if (doctor == null)
                 {
-                    return Forbid();
+                    return NotFound("Doctor not found");
                 }
-            }
-            
-            var records = await _context.MedicalRecords
-                .Where(r => r.PatientId == patientId)
-                .Include(r => r.Doctor)
-                    .ThenInclude(d => d.User)
-                .OrderByDescending(r => r.RecordDate)
-                .Select(r => new {
+                
+                // Check if doctor has access to this patient's records
+                var hasAccess = await _context.Appointments
+                    .AnyAsync(a => a.DoctorId == doctor.Id && a.PatientId == patientId);
+                    
+                if (!hasAccess)
+                {
+                    var relationship = await _context.DoctorPatientRelationships
+                        .AnyAsync(dp => dp.DoctorId == doctor.Id && dp.PatientId == patientId);
+                        
+                    if (!relationship)
+                    {
+                        return Forbid();
+                    }
+                }
+                
+                var records = await _context.MedicalRecords
+                    .Where(r => r.PatientId == patientId)
+                    .Include(r => r.Doctor)
+                        .ThenInclude(d => d.User)
+                    .OrderByDescending(r => r.RecordDate)
+                    .ToListAsync();
+
+                // Process records in memory where we can safely handle nulls
+                var processedRecords = records.Select(r => new {
                     id = r.Id,
                     recordDate = r.RecordDate,
-                    diagnosis = r.Diagnosis,
-                    prescription = r.Prescription,
-                    labResults = r.LabResults,
-                    notes = r.Notes,
-                    filePath = r.FilePath,
-                    doctorName = r.Doctor.User.Username
-                })
-                .ToListAsync();
-                
-            return Ok(records);
+                    diagnosis = r.Diagnosis ?? string.Empty,
+                    prescription = r.Prescription ?? string.Empty,
+                    labResults = r.LabResults ?? string.Empty,
+                    notes = r.Notes ?? string.Empty,
+                    filePath = r.FilePath ?? string.Empty,
+                    doctorName = (r.Doctor?.User?.Username) ?? "Unknown Doctor"
+                }).ToList();
+                    
+                return Ok(processedRecords);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized("Invalid user authentication");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting medical records for patient {PatientId}", patientId);
+                return StatusCode(500, "An error occurred while fetching medical records");
+            }
         }
     }
 
