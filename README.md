@@ -22,7 +22,7 @@ This solution consists of two main components:
 
 ### Prerequisites
 
-- .NET SDK 9.0 or later
+- .NET SDK 8.0 or later
 - Node.js (v16 or later) and npm
 - SQL Server (or compatible database)
 
@@ -31,6 +31,7 @@ This solution consists of two main components:
 1. Navigate to the API project directory:
 ```
 cd HospitalManagement.API
+Change the global.json file according to your .net sdk
 ```
 
 2. Restore packages:
@@ -38,7 +39,7 @@ cd HospitalManagement.API
 dotnet restore
 ```
 
-3. Update database connection string in `appsettings.json` or using User Secrets
+3. Update database connection string in `appsettings.json` or using User Secrets (copy the appsettings.example.json file into appsettings.json with your credentials)
 
 4. Apply database migrations:
 ```
