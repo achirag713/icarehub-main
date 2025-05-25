@@ -1,0 +1,297 @@
+/* Auth Pages (SignIn, SignUp) Styling */
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.auth-page {
+  flex: 1;
+  width: 100%;
+  
+  background-size: cover;
+}
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: calc(100vh - 160px); /* Subtract header and footer height */
+  padding: 2rem;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 550px; /* Increased from 450px to 650px */
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2),
+              0 2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12),
+              0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+.auth-card h2 {
+  margin: 0 0 1.75rem;
+  color: #1a365d;
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.auth-card h3 {
+  margin: 0 0 1.5rem;
+  color: #2d3748;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Add grid layout for registration form */
+.registration-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+/* Full width for certain fields */
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.625rem;
+  color: #2d3748;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  color: #2d3748;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+  border-color: #cbd5e0;
+  background-color: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4299e1;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+}
+
+.form-group input::placeholder {
+  color: #a0aec0;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.auth-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.25);
+}
+
+.auth-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(66, 153, 225, 0.2);
+}
+
+.auth-button-secondary {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #3182ce;
+  border-radius: 8px;
+  background: transparent;
+  color: #3182ce;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.auth-button-secondary:hover:not(:disabled) {
+  background-color: #ebf8ff;
+}
+
+.error-message {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  background-color: #fff5f5;
+  border: 1px solid rgba(245, 101, 101, 0.3);
+  color: #c53030;
+  font-size: 0.9375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.success-message {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  background-color: #f0fff4;
+  border: 1px solid rgba(72, 187, 120, 0.3);
+  color: #2f855a;
+  font-size: 0.9375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-links {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+  font-size: 0.9375rem;
+  color: #4a5568;
+}
+
+.auth-links a {
+  color: #4299e1;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.auth-links a:hover {
+  color: #2b6cb0;
+}
+
+.auth-links a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: #4299e1;
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+.auth-links a:hover::after {
+  transform: scaleX(1);
+}
+
+/* OTP Input Styling */
+.otp-input-container {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+
+.otp-input {
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  font-size: 1.25rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.otp-input:focus {
+  outline: none;
+  border-color: #3182ce;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.resend-timer {
+  text-align: center;
+  color: #718096;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+
+.otp-step-description {
+  text-align: center;
+  color: #4a5568;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 1rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem;
+  }
+
+  .auth-card h2 {
+    font-size: 1.75rem;
+  }
+
+  .registration-form {
+    grid-template-columns: 1fr; /* Stack fields vertically on mobile */
+  }
+
+  .form-group.full-width {
+    grid-column: auto; /* Reset grid span on mobile */
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.75rem 0.875rem;
+  }
+}

@@ -1,0 +1,447 @@
+/* Appointments Page Styles */
+.appointments-container {
+  padding: 1rem;
+  background-color: #f5f9ff;
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e9f2;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  color: #1a3b66;
+  margin: 0;
+  font-weight: 600;
+  width: 100%;
+}
+
+/* Table Styles */
+.appointments-list {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto; /* Adds horizontal scroll for smaller screens */
+  margin: 1rem 0;
+}
+
+.appointments-list table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  table-layout: auto; /* This ensures equal column distribution */
+}
+
+.appointments-list th,
+.appointments-list td {
+  border: 1px solid #e0e0e0;
+  text-align: left;
+  padding: 12px;
+  min-width: 120px; /* Ensures minimum width for each column */
+  width: auto; /* Let the table-layout: fixed handle the width */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointments-list th {
+  background-color: #f0f7ff;
+  color: #1a3b66;
+  font-weight: 600;
+  text-align: left;
+  padding: 1.2rem 1rem;
+  border-bottom: 2px solid #e0e9f2;
+}
+
+.appointments-list td {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e9f2;
+  color: #2c3e50;
+}
+
+.appointments-list tr:last-child td {
+  border-bottom: none;
+}
+
+.appointments-list tr:hover {
+  background-color: #f9fbff;
+}
+
+/* Status Badge Styles */
+.status-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+.status-badge.scheduled {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-badge.completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.cancelled, .status-badge.noshow {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.status-badge.pending {
+  background-color: #fff8e1;
+  color: #f57c00;
+}
+
+.appointment-info h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.3rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.appointment-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.appointment-details {
+  margin-top: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.detail-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.detail-item strong {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.detail-item span {
+  font-size: 1.05rem;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.375rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.status-badge.scheduled {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-badge.completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.cancelled {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn-cancel, .btn-bill {
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.btn-cancel:hover {
+  background-color: #ffcdd2;
+}
+
+.btn-bill {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.btn-bill:hover {
+  background-color: #c8e6c9;
+}
+
+/* Styling for bill view button (when bill already exists) */
+.btn-bill-view {
+  background-color: #e1f5fe;
+  color: #0277bd;
+}
+
+.btn-bill-view:hover {
+  background-color: #b3e5fc;
+}
+
+/* Disabled buttons */
+.btn-cancel:disabled, .btn-bill:disabled {
+  background-color: #f0f0f0;
+  color: #a0a0a0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-cancel:disabled:hover, .btn-bill:disabled:hover {
+  background-color: #f0f0f0;
+}
+
+/* Loading and Error States */
+.loading, .error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  font-size: 1.1rem;
+  color: #1a3b66;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.error {
+  color: #c62828;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Bill Modal Styles - Based on Doctor Modal */
+.bill-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.bill-modal-content {
+  background: white;
+  border-radius: 12px;
+  position: relative;
+  width: 95%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.bill-modal-header {
+  flex-shrink: 0;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+}
+
+.bill-modal-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #343a40;
+  font-weight: 600;
+}
+
+.bill-close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #adb5bd;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.bill-modal-body {
+  padding: 2rem;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.bill-modal-footer {
+  flex-shrink: 0;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  background-color: #f8f9fa;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #1a3b66;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e9f2;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn-primary, .btn-secondary {
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #1976d2;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1565c0;
+}
+
+.btn-secondary {
+  background-color: #e0e9f2;
+  color: #1a3b66;
+}
+
+.btn-secondary:hover {
+  background-color: #c4d5e9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .appointments-container {
+    padding: 0.5rem;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .appointments-list {
+    overflow-x: auto;
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    width: 95%;
+  }
+}

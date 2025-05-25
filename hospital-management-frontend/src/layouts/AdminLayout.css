@@ -1,0 +1,34 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 260px; /* Width of the sidebar */
+  padding: 1rem;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  width: calc(100% - 260px); /* Full width minus sidebar */
+}
+
+.content-wrapper {
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  
+  .content-wrapper {
+    padding: 1rem;
+  }
+}

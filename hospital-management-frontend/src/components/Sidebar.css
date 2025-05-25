@@ -1,0 +1,281 @@
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background: rgba(113, 65, 136, 0.467); /* Bluish color to match button/navbar */
+  border-right: 1px solid #2a2a2a;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  color: white;
+}
+
+/* Admin sidebar specific styling */
+.admin-sidebar {
+  background: linear-gradient(135deg, #0d2546 0%, #1565c0 100%); /* Dark blue gradient */
+  color: #fff; /* White text */
+  border-right: 1px solid #2a2a2a;
+}
+
+/* Doctor sidebar specific styling */
+.doctor-sidebar {
+  background: linear-gradient(135deg, #102542 0%, #1976d2 100%); /* Dark blue gradient */
+  color: #fff;
+  border-right: 1px solid #2a2a2a;
+}
+
+/* Patient sidebar specific styling */
+.patient-sidebar {
+  background: linear-gradient(135deg, #1a237e 0%, #283593 100%); /* Dark blue gradient */
+  color: #fff;
+  border-right: 1px solid #2a2a2a;
+}
+
+/* Nurse sidebar specific styling */
+.nurse-sidebar {
+  background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); /* Dark blue gradient */
+  color: #fff;
+  border-right: 1px solid #2a2a2a;
+}
+
+.admin-sidebar .menu-item,
+.doctor-sidebar .menu-item,
+.patient-sidebar .menu-item,
+.nurse-sidebar .menu-item {
+  color: #ffffff !important;
+}
+
+.admin-sidebar .menu-item:hover,
+.doctor-sidebar .menu-item:hover,
+.patient-sidebar .menu-item:hover,
+.nurse-sidebar .menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff !important;
+}
+
+.admin-sidebar .menu-item.active {
+  background-color: #005792;
+  color: white;
+}
+
+/* User profile in sidebar */
+.user-profile {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+  padding-top: 2rem;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #005792;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.75rem;
+}
+
+.user-info {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.user-info h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.user-info p {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  opacity: 1 !important;
+  color: #ffffff !important;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu {
+  padding: 1rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.menu-item.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    border-right: none;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .menu {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-around;
+  }
+  
+  .menu-item {
+    flex-direction: column;
+    padding: 0.5rem;
+    margin-bottom: 0;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+  
+  .icon {
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+  }
+  
+  .label {
+    font-size: 0.75rem;
+  }
+
+  .user-profile {
+    display: none;
+  }
+}
+
+/* Force white text color for all sidebar elements */
+.sidebar,
+.sidebar h3,
+.sidebar p,
+.user-info h3,
+.user-info p,
+.menu-item,
+.menu-item.active,
+.menu-item:hover,
+.logout-btn,
+.logout-btn:hover {
+  color: #ffffff !important;
+}
+
+.user-info p {
+  opacity: 1 !important;
+}
+
+.admin-sidebar,
+.doctor-sidebar,
+.patient-sidebar,
+.nurse-sidebar {
+  color: #fff !important;
+}
+
+.admin-sidebar .menu-item,
+.doctor-sidebar .menu-item,
+.patient-sidebar .menu-item,
+.nurse-sidebar .menu-item,
+.admin-sidebar .menu-item.active,
+.doctor-sidebar .menu-item.active,
+.patient-sidebar .menu-item.active,
+.nurse-sidebar .menu-item.active,
+.admin-sidebar .menu-item:hover,
+.doctor-sidebar .menu-item:hover,
+.patient-sidebar .menu-item:hover,
+.nurse-sidebar .menu-item:hover {
+  color: #fff !important;
+}
+
+.admin-sidebar .user-info h3,
+.doctor-sidebar .user-info h3,
+.patient-sidebar .user-info h3,
+.nurse-sidebar .user-info h3,
+.admin-sidebar .user-info p,
+.doctor-sidebar .user-info p,
+.patient-sidebar .user-info p,
+.nurse-sidebar .user-info p {
+  color: #fff !important;
+}
+
+.admin-sidebar .logout-btn,
+.doctor-sidebar .logout-btn,
+.patient-sidebar .logout-btn,
+.nurse-sidebar .logout-btn {
+  color: #fff !important;
+}
+
+/* Override any potential text color inheritance */
+.sidebar *,
+.admin-sidebar *,
+.doctor-sidebar *,
+.patient-sidebar *,
+.nurse-sidebar * {
+  color: #ffffff !important;
+}
+
+/* Specific overrides for common problem areas */
+.sidebar .menu-item,
+.sidebar .menu-item:hover,
+.sidebar .menu-item.active,
+.sidebar .user-info h3,
+.sidebar .user-info p,
+.sidebar .logout-btn {
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+/* Remove any opacity that might affect text */
+.sidebar .user-info *,
+.sidebar .menu-item *,
+.sidebar .logout-btn * {
+  opacity: 1 !important;
+}
