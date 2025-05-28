@@ -98,13 +98,27 @@ const Appointments = () => {
         
         return appointment; // Return original appointment if no update needed
       }));
+        // Sort appointments by status and date
+      // Custom status sorting: scheduled (0) first, then completed (1), then cancelled (2) and no-show (3)
+      // Within each status group, sort by date (newest first)
+      const sortedAppointments = [...updatedAppointments].sort((a, b) => {
+        // First, sort by status priority
+        if (a.status !== b.status) {
+          // Custom sorting order: 0 (Scheduled), 1 (Completed), 2 (Cancelled), 3 (No-show)
+          return a.status - b.status;
+        }
+        
+        // For appointments with the same status, sort by date (newest first)
+        const dateA = new Date(a.appointmentDate);
+        const dateB = new Date(b.appointmentDate);
+        return dateB - dateA; // Descending order (newer dates first)
+      });
       
-      setAppointments(updatedAppointments);
+      setAppointments(sortedAppointments);
       
       // Check which completed appointments already have bills
       const completedAppointments = updatedAppointments.filter(app => app.status === 1);
-      
-    } catch (err) {
+      } catch (err) {
       console.error('Error fetching appointments:', err);
       setError('Failed to load appointments. Please try again later.');
     } finally {
@@ -270,13 +284,7 @@ Description: ${appointmentBill.description}`;
       
       setIsBillModalOpen(false);
         // Show success message
-      alert('Bill uploaded successfully!');
-      
-      // Update UI to show "View Bill" button
-      document.querySelectorAll(`.btn-bill[data-appointment-id="${billData.appointmentId}"]`).forEach(button => {
-        button.textContent = 'View Bill';
-        button.classList.add('btn-bill-view');
-      });
+      alert('Bill uploaded successfully!');      // Removed code that changes button text to "View Bill" to keep it as "Upload Bill"
     } catch (error) {
       console.error('Error adding bill:', error);
       alert('Error uploading bill. Please try again.');
@@ -452,12 +460,12 @@ Description: ${appointmentBill.description}`;
                       >
                         Cancel
                       </button>                      <button
-                        className={`btn-bill ${appointmentBillStatus[appointment.id] ? 'btn-bill-view' : ''}`}
+                        className="btn-bill"
                         onClick={() => handleUploadBill(appointment)}
                         disabled={appointment.status !== 1} // Only enable for completed appointments
                         data-appointment-id={appointment.id}
                       >
-                        {appointmentBillStatus[appointment.id] ? 'View Bill' : 'Upload Bill'}
+                        {'Upload Bill'}
                       </button>
                     </div>
                   </td>

@@ -5,41 +5,66 @@ import { admin } from '../../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import './Dashboard.css';
+// Import Chart.js components
+import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+// Register Chart.js components
+ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartDataLabels);
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [dashboardData, setDashboardData] = useState({
+  const [error, setError] = useState(null);  const [dashboardData, setDashboardData] = useState({
     stats: {
       totalPatients: 0,
       totalDoctors: 0,
       totalAppointments: 0,
+      appointmentsByStatus: {
+        scheduled: 0,
+        completed: 0,
+        cancelled: 0
+      },
+      patientsByGender: {
+        male: 0,
+        female: 0,
+        other: 0
+      }
     },
     recentAppointments: [],
     recentPatients: [],
-    recentDoctors: []
-  });
-
-  useEffect(() => {
+    recentDoctors: [],
+    weeklyAppointments: [0, 0, 0, 0, 0, 0, 0]
+  });useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const [stats, appointments, patients, doctors] = await Promise.all([
+        const [stats, appointments, patients, doctors, chartData] = await Promise.all([
           admin.getDashboardStats(),
           admin.getRecentAppointments(),
           admin.getRecentPatients(),
-          admin.getRecentDoctors()
+          admin.getRecentDoctors(),
+          admin.getChartData()
         ]);
 
-        console.log('Recent Patients Data:', patients.data); // Debug log
+        console.log('Recent Patients Data:', patients.data);
+        console.log('Chart Data:', chartData.data);
+        
+        // Use real data from backend for charts
+        const enhancedStats = {
+          ...stats.data,
+          appointmentsByStatus: chartData.data.appointmentsByStatus,
+          patientsByGender: chartData.data.patientsByGender
+        };
 
         setDashboardData({
-          stats: stats.data,
+          stats: enhancedStats,
           recentAppointments: appointments.data,
           recentPatients: patients.data,
-          recentDoctors: doctors.data
+          recentDoctors: doctors.data,
+          weeklyAppointments: chartData.data.appointmentsByDay
         });
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -51,9 +76,129 @@ const Dashboard = () => {
 
     fetchDashboardData();
   }, []);
+  // Prepare data for appointment status pie chart
+  const prepareAppointmentStatusChartData = () => {
+    const { appointmentsByStatus } = dashboardData.stats;
+    
+    return {
+      labels: ['Scheduled', 'Completed', 'Cancelled'],
+      datasets: [
+        {
+          data: [
+            appointmentsByStatus.scheduled,
+            appointmentsByStatus.completed, 
+            appointmentsByStatus.cancelled
+          ],
+          backgroundColor: [
+            '#4CAF50',  // Green for scheduled
+            '#2196F3',  // Blue for completed
+            '#FF9800',  // Orange for cancelled
+          ],
+          borderColor: [
+            '#388E3C',
+            '#1565C0',
+            '#E65100',
+          ],
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
 
-  // Helper function to calculate age from date of birth
-  
+  // Prepare data for patient gender distribution chart
+  const preparePatientGenderChartData = () => {
+    const { patientsByGender } = dashboardData.stats;
+    
+    return {
+      labels: ['Male', 'Female', 'Other'],
+      datasets: [
+        {
+          data: [
+            patientsByGender.male,
+            patientsByGender.female,
+            patientsByGender.other
+          ],
+          backgroundColor: [
+            '#2196F3',  // Blue for male
+            '#E91E63',  // Pink for female
+            '#9C27B0',  // Purple for other
+          ],
+          borderColor: [
+            '#1565C0',
+            '#C2185B',
+            '#7B1FA2',
+          ],
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+  // Options for pie charts
+  const pieChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right',
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.raw || 0;
+            const total = context.dataset.data.reduce((acc, curr) => acc + curr, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        }
+      },
+      datalabels: {
+        display: true,
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 12,
+        },
+        formatter: (value, ctx) => {
+          const total = ctx.dataset.data.reduce((acc, data) => acc + data, 0);
+          const percentage = Math.round((value / total) * 100);
+          return `${percentage}%`;
+        }
+      }
+    }
+  };
+    // Bar chart data for appointments by day
+  const appointmentsByDayData = {
+    labels: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    datasets: [
+      {
+        label: 'Appointments',
+        data: dashboardData.weeklyAppointments,
+        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+      },
+    ],
+  };
+    const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Appointments by Day',
+      },
+      datalabels: {
+        anchor: 'end',
+        align: 'top',
+        formatter: (value) => value,
+        font: {
+          weight: 'bold'
+        }
+      }
+    },
+  };
 
   if (loading) {
     return (
@@ -74,7 +219,6 @@ const Dashboard = () => {
       </AdminLayout>
     );
   }
-
   return (
     <AdminLayout>
       <div className="dashboard-container">
@@ -96,12 +240,36 @@ const Dashboard = () => {
             <h3>Total Appointments</h3>
             <div className="stat-value">{dashboardData.stats.totalAppointments}</div>
           </div>
-          
         </div>
-
-        <div className="dashboard-grid">          <div className="dashboard-card">
+        
+        <div className="charts-container">
+          <div className="chart-row">
+            <div className="chart-card">
+              <h3>Appointment Status Distribution</h3>
+              <div className="chart-container">
+                <Pie data={prepareAppointmentStatusChartData()} options={pieChartOptions} />
+              </div>
+            </div>
+            
+            <div className="chart-card">
+              <h3>Patient Gender Distribution</h3>
+              <div className="chart-container">
+                <Pie data={preparePatientGenderChartData()} options={pieChartOptions} />
+              </div>
+            </div>
+          </div>
+          
+          <div className="chart-row">
+            <div className="chart-card wide">
+              <h3>Weekly Appointment Distribution</h3>
+              <div className="chart-container">
+                <Bar data={appointmentsByDayData} options={barChartOptions} />
+              </div>
+            </div>
+          </div>
+        </div>        <div className="dashboard-grid">          <div className="dashboard-card">
             <div className="card-header-with-action">
-              <h3>Latest Appointment</h3>
+              <h3>Appointments</h3>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -127,7 +295,7 @@ const Dashboard = () => {
             )}
           </div>          <div className="dashboard-card">
             <div className="card-header-with-action">
-              <h3>Latest Patient</h3>
+              <h3>Recent Patients</h3>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -137,16 +305,18 @@ const Dashboard = () => {
                 View All
               </Button>
             </div>            {dashboardData.recentPatients && dashboardData.recentPatients.length > 0 ? (
-              <div className="latest-item">
-                <div className="patient-name">
-                  {dashboardData.recentPatients[0].firstName} {dashboardData.recentPatients[0].lastName}
-                </div>
-                <div className="patient-details">
-                  <strong>Gender: {dashboardData.recentPatients[0].gender}</strong> 
-                  
-                  
-                  <strong>Last Visit: {dashboardData.recentPatients[0].lastVisit ? new Date(dashboardData.recentPatients[0].lastVisit).toLocaleDateString() : 'N/A'}</strong> 
-                </div>
+              <div className="patients-list">
+                {dashboardData.recentPatients.slice(0, 1).map((patient, index) => (
+                  <div key={index} className="patient-item">
+                    <div className="patient-name">
+                      {patient.firstName} {patient.lastName}
+                    </div>
+                    <div className="patient-details">
+                      <span className="patient-gender">{patient.gender}</span>
+                      <span className="patient-visit">{patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'No visits'}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <p className="no-data-message">No recent patients</p>

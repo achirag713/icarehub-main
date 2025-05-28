@@ -25,12 +25,12 @@ const SignIn = () => {
       [name]: value
     }));
   };
-
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission behavior
     setError('');
     setLoading(true);
     showLoading();
+    
     try {
       const response = await auth.signin(formData);
       const { token, user } = response.data;
@@ -57,7 +57,19 @@ const SignIn = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Failed to sign in. Please try again.');
+      
+      // Set specific error messages based on response status
+      if (err.response?.status === 401) {
+        setError('Invalid email or password. Please try again.');
+      } else if (err.response?.status === 403) {
+        setError('Your account has been locked. Please contact support.');
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError('Failed to sign in. Please check your credentials and try again.');
+      }
+      
+      // Important: Don't navigate or refresh the page on error
     } finally {
       setLoading(false);
       hideLoading();

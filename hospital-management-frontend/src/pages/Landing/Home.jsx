@@ -45,11 +45,7 @@ const Home = () => {
               <h3>Expert Doctors</h3>
               <p>Experienced specialists across various medical fields.</p>
             </div>
-            <div className="service-card">
-              <div className="service-icon">💊</div>
-              <h3>Pharmacy</h3>
-              <p>In-house pharmacy with all essential medications.</p>
-            </div>
+            
             <div className="service-card">
               <div className="service-icon">🔬</div>
               <h3>Lab Services</h3>

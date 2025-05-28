@@ -137,6 +137,7 @@
 .card-content {
   display: flex;
   flex-direction: column;
+  background-color: white;
 }
 
 .booking-header {
@@ -222,6 +223,7 @@
   display: flex;
   align-items: center;
   margin-bottom: 0.5rem;
+  background-color: white;
 }
 
 .detail-row:last-child {

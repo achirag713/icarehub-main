@@ -213,17 +213,20 @@ namespace HospitalManagement.API.Controllers
                 // For reset password, verify that the user exists
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
                 if (user == null)
-                {
-                    // Don't reveal that the user doesn't exist
+                {                    // Don't reveal that the user doesn't exist
                     return Ok(new OtpResponse { Success = true, Message = "If your email is registered, you will receive an OTP" });
                 }
             }
-
-            var success = await _otpService.SendOtpAsync(request.Email, request.Purpose);
+            
+            var (success, errorMessage) = await _otpService.SendOtpAsync(request.Email, request.Purpose);
             
             if (!success)
             {
-                return StatusCode(500, new OtpResponse { Success = false, Message = "Failed to send OTP" });
+                return StatusCode(500, new OtpResponse { 
+                    Success = false, 
+                    Message = "Failed to send OTP", 
+                    DetailedMessage = errorMessage 
+                });
             }
 
             return Ok(new OtpResponse { Success = true, Message = "OTP sent successfully" });

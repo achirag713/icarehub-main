@@ -26,8 +26,12 @@ api.interceptors.response.use(
       // Handle specific error status codes
       switch (error.response.status) {
         case 401:
-          // Handle unauthorized
-          window.location.href = '/signin';
+          // Only redirect to signin if not already on signin or auth page
+          // This prevents refresh loops when login credentials are incorrect
+          const currentPath = window.location.pathname.toLowerCase();
+          if (!currentPath.includes('signin') && !currentPath.includes('auth') && !currentPath.includes('signup')) {
+            window.location.href = '/signin';
+          }
           break;
         case 403:
           // Handle forbidden
@@ -55,6 +59,7 @@ export const patient = {
   changePassword: (data) => api.put('/Patient/change-password', data),
   updateNotificationPreferences: (data) => api.put('/Patient/notification-preferences', data),
   deleteAccount: () => api.delete('/Patient/account'),
+  getChartData: () => api.get('/Patient/chart-data'),
 
   // Doctors
   getAllDoctors: () => api.get('/Doctor').then(response => {
@@ -878,8 +883,7 @@ export const admin = {
       response.data = [];
     }
     return response;
-  }),
-  getRecentDoctors: () => api.get('/Admin/recent-doctors').then(response => {
+  }),  getRecentDoctors: () => api.get('/Admin/recent-doctors').then(response => {
     // Normalize doctor data
     if (Array.isArray(response.data)) {
       response.data = response.data.map(doctor => {
@@ -896,7 +900,9 @@ export const admin = {
       response.data = [];
     }
     return response;
-  })
+  }),
+  // Get chart data for the dashboard
+  getChartData: () => api.get('/Admin/chart-data')
 };
  
 // Auth API endpoints

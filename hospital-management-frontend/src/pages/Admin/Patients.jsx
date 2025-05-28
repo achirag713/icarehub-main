@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../layouts/AdminLayout';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import { admin } from '../../services/api';
 import './Patients.css';
+
+
 
 const AdminPatients = () => {
   const [patients, setPatients] = useState([]);
@@ -157,15 +159,11 @@ const AdminPatients = () => {
     return patientName.includes(searchTerm.toLowerCase()) ||
            patientEmail.includes(searchTerm.toLowerCase());
   });
-
   const renderPatientCard = (patient) => (
     <div key={patient.id} className="patient-card">
       <div className="patient-header">
-        <h3>{patient.name}</h3>
-        <span className="patient-age-gender"> {patient.gender}</span>
         <div className="patient-info">
-          
-          
+          {patient.name}          
         </div>
         <div className="patient-actions">
           <Button 
@@ -188,9 +186,9 @@ const AdminPatients = () => {
       <div className="patient-details">
         <p><strong>Email:</strong> {patient.email}</p>
         <p><strong>Phone:</strong> {patient.phoneNumber}</p>
-        <p><strong>Address:</strong> {patient.address}</p>
-        <p><strong>Medical History:</strong> {patient.medicalHistory}</p>
-        <p><strong>Blood Group:</strong> {patient.bloodGroup}</p>
+        <p><strong>Address:</strong> {patient.address || 'N/A'}</p>
+        <p><strong>Medical History:</strong> {patient.medicalHistory || 'None'}</p>
+        <p><strong>Blood Group:</strong> {patient.bloodGroup || 'Not specified'}</p>
       </div>
     </div>
   );
@@ -304,8 +302,7 @@ const AdminPatients = () => {
   );
 
   return (
-    <AdminLayout>
-      <div className="admin-patients">
+    <AdminLayout>      <div className="admin-patients">
         <div className="page-header">
           <h1>Patients</h1>
         </div>
@@ -314,7 +311,7 @@ const AdminPatients = () => {
           <div className="search-box">
             <input
               type="text"
-              placeholder="     Search patients..."
+              placeholder="Search patients by name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -326,9 +323,13 @@ const AdminPatients = () => {
             <div className="loading-spinner" />
             <p>Loading patients...</p>
           </div>
-        ) : (
+        ) : filteredPatients.length > 0 ? (
           <div className="patients-grid">
             {filteredPatients.map(renderPatientCard)}
+          </div>
+        ) : (
+          <div className="no-data-message">
+            <p>No patients found. Add a new patient to get started.</p>
           </div>
         )}
 

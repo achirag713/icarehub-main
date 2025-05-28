@@ -23,14 +23,14 @@ const Settings = () => {
     dateOfBirth: '',
     gender: '',
     bloodGroup: '',
-    
+
   });
   const [password, setPassword] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -83,6 +83,11 @@ const Settings = () => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
+
+    // Ignore changes to email field
+    if (name === 'email') {
+      return;
+    }
     // Handle the phone number specifically to update 'phoneNumber' in state
     if (name === 'phone') {
       setProfile(prev => ({
@@ -114,7 +119,7 @@ const Settings = () => {
     }));
   };
 
-  
+
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -249,6 +254,7 @@ const Settings = () => {
                     onChange={handleProfileChange}
                     required
                   />
+                  <small className="field-note">Email cannot be changed</small>
                 </div>
 
                 <div className="form-group">
@@ -328,70 +334,70 @@ const Settings = () => {
             </form>
           </section>
 
-          
+
 
           {/* Password Change */}
           <section className="settings-section">
-            
+
             <h2>Change Password</h2>
             <form onSubmit={handlePasswordSubmit}>
-              
+
               <div className="form-grid">
                 <ul>
-              <li></li>
-                <div className="form-group">
-                  <label htmlFor="currentPassword">Current Password</label>
-                  <input
-                    type="password"
-                    id="currentPassword"
-                    name="currentPassword"
-                    value={password.currentPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                </div>                 <div className="form-group">
-                  <label htmlFor="newPassword">New Password</label>
-                  <input
-                    type="password"
-                    id="newPassword"
-                    name="newPassword"
-                    value={password.newPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                  <div className="password-requirements">
-                    <p>Password must contain:</p>
-                    <ul>
-                      <li className={password.newPassword.length >= 8 ? 'met' : ''}>
-                        At least 8 characters
-                      </li>
-                      <li className={/[A-Z]/.test(password.newPassword) ? 'met' : ''}>
-                        One uppercase letter
-                      </li>
-                      <li className={/[a-z]/.test(password.newPassword) ? 'met' : ''}>
-                        One lowercase letter
-                      </li>
-                      <li className={/\d/.test(password.newPassword) ? 'met' : ''}>
-                        One number
-                      </li>
-                      <li className={/[!@#$%^&*(),.?":{}|<>]/.test(password.newPassword) ? 'met' : ''}>
-                        One special character
-                      </li>
-                    </ul>
+                  <li></li>
+                  <div className="form-group">
+                    <label htmlFor="currentPassword">Current Password</label>
+                    <input
+                      type="password"
+                      id="currentPassword"
+                      name="currentPassword"
+                      value={password.currentPassword}
+                      onChange={handlePasswordChange}
+                      required
+                    />
+                  </div>                 <div className="form-group">
+                    <label htmlFor="newPassword">New Password</label>
+                    <input
+                      type="password"
+                      id="newPassword"
+                      name="newPassword"
+                      value={password.newPassword}
+                      onChange={handlePasswordChange}
+                      required
+                    />
+                    <div className="password-requirements">
+                      <p>Password must contain:</p>
+                      <ul>
+                        <li className={password.newPassword.length >= 8 ? 'met' : ''}>
+                          At least 8 characters
+                        </li>
+                        <li className={/[A-Z]/.test(password.newPassword) ? 'met' : ''}>
+                          One uppercase letter
+                        </li>
+                        <li className={/[a-z]/.test(password.newPassword) ? 'met' : ''}>
+                          One lowercase letter
+                        </li>
+                        <li className={/\d/.test(password.newPassword) ? 'met' : ''}>
+                          One number
+                        </li>
+                        <li className={/[!@#$%^&*(),.?":{}|<>]/.test(password.newPassword) ? 'met' : ''}>
+                          One special character
+                        </li>
+                      </ul>
+                    </div>
                   </div>
-                </div>
 
-                <div className="form-group">
-                  <label htmlFor="confirmPassword">Confirm New Password</label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={password.confirmPassword}
-                    onChange={handlePasswordChange}
-                    required
-                  />
-                </div>
+                  <div className="form-group">
+                    <label htmlFor="confirmPassword">Confirm New Password</label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={password.confirmPassword}
+                      onChange={handlePasswordChange}
+                      required
+                    />
+                  </div>
                 </ul>
               </div>
 
@@ -400,12 +406,12 @@ const Settings = () => {
                   Change Password
                 </Button>
               </div>
-              
+
             </form>
-            
+
           </section>
 
-          
+
 
           {/* Delete Account */}
           <section className="settings-section danger-zone">

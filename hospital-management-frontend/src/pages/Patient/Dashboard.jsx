@@ -5,6 +5,12 @@ import { useAuth } from '../../context/AuthContext';
 import { formatDate } from '../../utils/dateUtils';
 import { patient } from '../../services/api';
 import './Dashboard.css';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
+// Register Chart.js components
+ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartDataLabels);
 
 const PatientDashboard = () => {
   const { user } = useAuth();
@@ -16,7 +22,10 @@ const PatientDashboard = () => {
   const [bills, setBills] = useState([]);
   const [healthUpdates, setHealthUpdates] = useState([]);
   const [nextAppointment, setNextAppointment] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null);  const [chartData, setChartData] = useState({
+    appointmentsByStatus: { scheduled: 0, completed: 0, cancelled: 0 },
+    appointmentHistory: { labels: [], data: [] }
+  });
 
   // Helper function to extract doctor name from various object structures
   const getDoctorName = (doctorObj) => {
@@ -106,11 +115,40 @@ const PatientDashboard = () => {
         setPatientProfile(profileResponse.data);
 
         // Fetch all other data in parallel
-        const [appointmentsRes, medicalRecordsRes, billsRes] = await Promise.all([
+        const [appointmentsRes, medicalRecordsRes, billsRes, chartDataRes] = await Promise.all([
           patient.getAppointments(),
           patient.getMedicalRecords(),
-          patient.getBills()
-        ]);
+          patient.getBills(),
+          patient.getChartData()
+        ]);        // Set chart data for appointment status if available from backend
+        if (chartDataRes && chartDataRes.data && chartDataRes.data.appointmentsByStatus) {
+          setChartData(prevState => ({
+            ...prevState,
+            appointmentsByStatus: chartDataRes.data.appointmentsByStatus
+          }));
+          console.log('Chart data loaded:', chartDataRes.data);
+        } else {
+          // Generate appointment status data from the appointments list if API doesn't provide it
+          const appointmentsByStatus = { scheduled: 0, completed: 0, cancelled: 0 };
+          
+          if (Array.isArray(appointmentsRes.data)) {
+            appointmentsRes.data.forEach(appointment => {
+              const statusStr = String(appointment.status).toLowerCase();
+              if (statusStr === 'scheduled' || statusStr === '0') {
+                appointmentsByStatus.scheduled++;
+              } else if (statusStr === 'completed' || statusStr === '1') {
+                appointmentsByStatus.completed++;
+              } else if (statusStr === 'cancelled' || statusStr === '2') {
+                appointmentsByStatus.cancelled++;
+              }
+            });
+          }
+          
+          setChartData(prevState => ({
+            ...prevState,
+            appointmentsByStatus
+          }));
+        }
 
         // Debug appointmentsRes
         console.log('==================== DASHBOARD DOCTOR INFORMATION ====================');
@@ -280,6 +318,71 @@ const PatientDashboard = () => {
             status: record.status
           }));
         setHealthUpdates(healthUpdatesData);
+
+        // Set chart data
+        const appointmentsByStatus = { scheduled: 0, completed: 0, cancelled: 0 };
+        const appointmentHistory = { labels: [], data: [] };
+        const medicalRecordTypes = { prescriptions: 0, labResults: 0, diagnoses: 0, other: 0 };
+        const billingStatus = { paid: 0, pending: 0, totalPaid: 0, totalPending: 0 };
+
+        // Process appointments for chart data
+        appointmentsRes.data.forEach(appointment => {
+          // Appointment status count
+          const statusStr = String(appointment.status).toLowerCase();
+          if (statusStr === 'scheduled' || statusStr === '0') {
+            appointmentsByStatus.scheduled = (appointmentsByStatus.scheduled || 0) + 1;
+          } else if (statusStr === 'completed' || statusStr === '1') {
+            appointmentsByStatus.completed = (appointmentsByStatus.completed || 0) + 1;
+          } else if (statusStr === 'cancelled' || statusStr === '2') {
+            appointmentsByStatus.cancelled = (appointmentsByStatus.cancelled || 0) + 1;
+          }
+
+          // Appointment history for line chart
+          const appointmentDate = appointment.date.split('T')[0]; // Get date part only
+          const existingDateIndex = appointmentHistory.labels.indexOf(appointmentDate);
+          if (existingDateIndex === -1) {
+            // New date entry
+            appointmentHistory.labels.push(appointmentDate);
+            appointmentHistory.data.push(1);
+          } else {
+            // Existing date entry, increment the count
+            appointmentHistory.data[existingDateIndex] += 1;
+          }
+        });
+
+        // Process medical records for chart data
+        medicalRecordsRes.data.forEach(record => {
+          // Medical record type count
+          if (record.type === 'prescription') {
+            medicalRecordTypes.prescriptions += 1;
+          } else if (record.type === 'lab_result') {
+            medicalRecordTypes.labResults += 1;
+          } else if (record.type === 'diagnosis') {
+            medicalRecordTypes.diagnoses += 1;
+          } else {
+            medicalRecordTypes.other += 1;
+          }
+        });
+
+        // Process bills for chart data
+        billsRes.data.forEach(bill => {
+          // Billing status count
+          if (bill.status === 'paid') {
+            billingStatus.paid += 1;
+            billingStatus.totalPaid += bill.amount;
+          } else if (bill.status === 'pending') {
+            billingStatus.pending += 1;
+            billingStatus.totalPending += bill.amount;
+          }
+        });
+
+        // Update chart data state
+        setChartData({
+          appointmentsByStatus,
+          appointmentHistory,
+          medicalRecordTypes,
+          billingStatus
+        });
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -455,6 +558,119 @@ const PatientDashboard = () => {
         return 'status-scheduled';
     }
   };
+  // Chart preparation functions
+  const prepareAppointmentStatusChart = () => {
+    return {
+      labels: ['Scheduled', 'Completed', 'Cancelled'],
+      datasets: [
+        {
+          data: [
+            chartData.appointmentsByStatus.scheduled,
+            chartData.appointmentsByStatus.completed,
+            chartData.appointmentsByStatus.cancelled
+          ],
+          backgroundColor: ['#4CAF50', '#2196F3', '#F44336'],
+          borderColor: ['#388E3C', '#1976D2', '#D32F2F'],
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  const prepareAppointmentHistoryChart = () => {
+    // Create arrays for days of the week
+    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const appointmentCounts = Array(7).fill(0); // Initialize with zeros
+    
+    // Count appointments for each day
+    if (appointments && appointments.length > 0) {
+      appointments.forEach(appointment => {
+        try {
+          const aptDate = new Date(appointment.date);
+          if (!isNaN(aptDate.getTime())) {
+            // Get day of week (0 = Sunday, so we'll adjust to make Monday = 0)
+            let dayOfWeek = aptDate.getDay(); // 0-6
+            dayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Convert to 0-6 where 0 is Monday
+            appointmentCounts[dayOfWeek]++;
+          }
+        } catch (error) {
+          console.error('Error parsing appointment date:', error);
+        }
+      });
+    }
+
+    return {
+      labels: weekdays,
+      datasets: [
+        {
+          label: 'Appointments',
+          data: appointmentCounts,
+          backgroundColor: '#42A5F5',
+          borderColor: '#1976D2',
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  // Chart options
+  const pieChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          usePointStyle: true,
+          pointStyle: 'circle',
+        }
+      },
+      datalabels: {
+        formatter: (value, context) => {
+          const sum = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+          if (sum === 0) return '';
+          const percentage = Math.round((value / sum) * 100);
+          return percentage > 5 ? `${percentage}%` : '';
+        },
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 12
+        }
+      }
+    },
+  };
+
+  const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      datalabels: {
+        formatter: (value) => {
+          return value > 0 ? value : '';
+        },
+        color: '#333',
+        anchor: 'end',
+        align: 'top',
+        font: {
+          size: 11,
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+          precision: 0
+        }
+      }
+    }
+  };
 
   // Helper function to check if an appointment is cancelled
   const isAppointmentCancelled = (status) => {
@@ -557,14 +773,14 @@ const PatientDashboard = () => {
                         return 0; // Keep original order if there's an error
                       }
                     })
-                    .slice(0, 2)
+                    .slice(0, 1)
                     .map((appointment) => (
                       <li key={appointment.id} className="summary-item">
                         <div className="item-icon appointment-icon">📅</div>
                         <div className="item-details">
                           <h3>Dr. {getDoctorName(appointment.doctor)}</h3>
                           <p>{getSpecialty(appointment.doctor, appointment)}</p>
-                          <p>{formatDate(appointment.date)} at {appointment.displayTime || appointment.time}</p>
+                          <p>{formatDate(appointment.date)}</p>
                         </div>
                         <div className={`item-status ${getStatusBadgeClass(appointment.status)}`}>
                           {getStatusDisplayText(appointment.status)}
@@ -589,12 +805,13 @@ const PatientDashboard = () => {
             <div className="card-content">
               {medicalRecords.length > 0 ? (
                 <ul className="summary-list">
-                  {medicalRecords.slice(0, 2).map((record) => (
+                  {medicalRecords.slice(0, 1).map((record) => (
                     <li key={record.id} className="summary-item">
                       <div className="item-icon record-icon">📋</div>
                       <div className="item-details">
                         <h3>{record.title || 'Medical Record'}</h3>
                         <p>Dr. {getDoctorName(record.doctor)}</p>
+                        <p>{record.recordDate.split('T')[0]}</p>
                         
                       </div>
                       <div className="item-status">{record.type || 'Record'}</div>
@@ -618,12 +835,12 @@ const PatientDashboard = () => {
             <div className="card-content">
               {bills.length > 0 ? (
                 <ul className="summary-list">
-                  {bills.slice(0, 2).map((bill) => (
+                  {bills.slice(0, 1).map((bill) => (
                     <li key={bill.id} className="summary-item">
                       <div className="item-icon bill-icon">💳</div>
                       <div className="item-details">
                         <h3>{bill.service}</h3>
-                        <p>Due: {formatDate(bill.dueDate)}</p>
+                        <p>Date: {formatDate(bill.dueDate)}</p>
                         <p>Rs. {bill.amount.toFixed(2)}</p>
                       </div>
                       <div className="item-status">Paid</div>
@@ -637,67 +854,83 @@ const PatientDashboard = () => {
               )}
             </div>
           </div>
-        </div>
+        </div>          {/* Chart Section */}
+        
 
-        <div className="detail-cards">
-          {/* Next Appointment Card */}
+        <div className="detail-cards">          {/* Next Appointment Card */}
           <div className="detail-card next-appointment">
             <div className="card-header">
               <h2>Next Appointment</h2>
+              {nextAppointment && (
+                <div className={`appointment-status-badge ${getStatusBadgeClass(nextAppointment.status)}`}>
+                  {getStatusDisplayText(nextAppointment.status)}
+                </div>
+              )}
             </div>
             <div className="card-content">
               {nextAppointment ? (
                 <div className="appointment-details">
-                  
-                  <div className="appointment-header">
-                    <div className="doctor-info">
-                      <h3>Dr. {getDoctorName(nextAppointment.doctor)}</h3>
-                      <p>{getSpecialty(nextAppointment.doctor, nextAppointment)}</p>
-                    </div>
-                    <div className={`appointment-status ${getStatusBadgeClass(nextAppointment.status)}`}>
-                      {getStatusDisplayText(nextAppointment.status)}
-                    </div>
-                  </div>
-                  <div className="appointment-time">
-                    <div className="date-time">
-                      <div className="date-icon">📅</div>
-                      <div className="date-details">
-                        <p className="label">Date</p>
-                        <p className="value">{formatDate(nextAppointment.date)}</p>
+                  <div className="appointment-card-content">
+                    <div className="doctor-profile">
+                      
+                      <div className="doctor-info">
+                        <h3>Dr. {getDoctorName(nextAppointment.doctor)}</h3>
+                        <p className="specialty">{getSpecialty(nextAppointment.doctor, nextAppointment)}</p>
                       </div>
                     </div>
-                    <div className="date-time">
-                      <div className="time-icon">⏰</div>
-                      <div className="time-details">
-                        <p className="label">Time</p>
-                        <p className="value">{nextAppointment.displayTime || nextAppointment.time}</p>
+                    
+                    <div className="appointment-divider"></div>
+                    
+                    <div className="appointment-time">
+                      <div className="date-time">
+                        <div className="date-icon">📅</div>
+                        <div className="date-details">
+                          <p className="label">Date</p>
+                          <p className="value">{formatDate(nextAppointment.date)}</p>
+                        </div>
+                      </div>
+                      <div className="date-time">
+                        <div className="time-icon">⏰</div>
+                        <div className="time-details">
+                          <p className="label">Time</p>
+                          <p className="value">{nextAppointment.displayTime || nextAppointment.time}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="appointment-actions">
+                    
+                    {nextAppointment.notes && (
+                      <div className="appointment-notes">
+                        <div className="notes-icon">📝</div>
+                        <p>{nextAppointment.notes}</p>
+                      </div>
+                    )}
+                    
+                    
+                    
                     {isAppointmentScheduled(nextAppointment.status) && (
-                      <>
+                      <div className="appointment-actions">
                         <button
                           className="btn btn-outline"
                           onClick={() => handleReschedule(nextAppointment.id)}
                         >
-                          Reschedule
+                           Reschedule
                         </button>
                         <button
                           className="btn btn-danger"
                           onClick={() => handleCancel(nextAppointment.id)}
                         >
-                          Cancel
+                           Cancel
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
               ) : (
                 <div className="no-data">
+                  <div className="no-appointment-icon">📆</div>
                   <p>No upcoming appointments scheduled.</p>
                   <Link to="/patient/book-appointments" className="btn btn-primary">
-                    Book an Appointment
+                    <span>➕</span> Book an Appointment
                   </Link>
                 </div>
               )}

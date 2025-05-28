@@ -18,11 +18,10 @@ namespace HospitalManagement.API.DTOs
         public required string Email { get; set; }
         public required string Otp { get; set; }
         public required string NewPassword { get; set; }
-    }
-
-    public class OtpResponse
+    }    public class OtpResponse
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
+        public string? DetailedMessage { get; set; }
     }
 }

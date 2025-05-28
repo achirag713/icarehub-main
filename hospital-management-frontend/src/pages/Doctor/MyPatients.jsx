@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import DoctorLayout from '../../layouts/DoctorLayout';
 import Modal from '../../components/common/Modal';
 import { useAuth } from '../../context/AuthContext';

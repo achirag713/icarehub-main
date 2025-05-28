@@ -263,6 +263,86 @@
   100% { transform: rotate(360deg); }
 }
 
+/* Chart Styles */
+.charts-container {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  min-width: 300px;
+  border-top: 4px solid #2196F3;
+}
+
+.chart-card.wide {
+  flex: 2;
+  min-width: 600px;
+}
+
+.chart-card h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #333;
+  text-align: center;
+}
+
+.chart-container {
+  height: 250px;
+  position: relative;
+}
+
+/* Patient list styling */
+.patients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.patient-item {
+  border-left: 4px solid #2196F3;
+  padding: 8px 12px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.patient-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.patient-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.patient-gender {
+  background-color: #e3f2fd;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.patient-visit {
+  font-style: italic;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .admin-dashboard {
@@ -302,6 +382,15 @@
   .doctor-card {
     min-height: 180px;
     padding: 1.2rem;
+  }
+
+  .chart-row {
+    flex-direction: column;
+  }
+
+  .chart-card, 
+  .chart-card.wide {
+    min-width: 100%;
   }
 }
 

@@ -7,7 +7,7 @@
   left: 0;
   top: 0;
   z-index: 1000;
-  overflow-y: auto;
+  overflow-y: hidden; /* Changed from auto to hidden to remove scrollbar */
   color: white;
 }
 

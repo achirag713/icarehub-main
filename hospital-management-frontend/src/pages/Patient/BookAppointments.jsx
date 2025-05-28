@@ -927,7 +927,7 @@ const BookAppointments = () => {
             <div className="success-icon">✓</div>
             <h2>Appointment Booked!</h2>
             <p>{successMessage}</p>
-            <p>Redirecting to your appointments...</p>
+            <p>Redirecting...</p>
           </div>
         ) : (
           <div className="booking-container">

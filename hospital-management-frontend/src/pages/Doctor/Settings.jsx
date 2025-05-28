@@ -81,7 +81,7 @@ const Settings = () => {
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     // Only update state for name, email, and phone
-    if (['name', 'email', 'phone'].includes(name)) {
+    if (['name',  'phone'].includes(name)) {
       setProfileForm(prev => ({
         ...prev,
         [name]: value
@@ -138,7 +138,7 @@ const Settings = () => {
       // Prepare data to send: only editable fields
       const dataToUpdate = {
         name: profileForm.name,
-        email: profileForm.email,
+        
         phoneNumber: profileForm.phone, // Map 'phone' state back to 'phoneNumber' for API
       };
 
@@ -288,7 +288,7 @@ const Settings = () => {
                   <form onSubmit={handleProfileSubmit}>
                     <div className="form-grid">
                       <div className="form-group">
-                        <label htmlFor="name">Full Name <span className="required">*</span></label>
+                        <label htmlFor="name">Full Name <span className="required"></span></label>
                         <input
                           type="text"
                           id="name"
@@ -301,7 +301,7 @@ const Settings = () => {
                       </div>
                       
                       <div className="form-group">
-                        <label htmlFor="email">Email Address <span className="required">*</span></label>
+                        <label htmlFor="email">Email Address <span className="required"></span></label>
                         <input
                           type="email"
                           id="email"
@@ -311,6 +311,7 @@ const Settings = () => {
                           placeholder="doctor@example.com"
                           required
                         />
+                        <small className="field-note">Email address cannot be changed</small>
                       </div>
                       
                       <div className="form-group">
@@ -415,7 +416,7 @@ const Settings = () => {
                   
                   <form onSubmit={handlePasswordSubmit}>
                     <div className="form-group">
-                      <label htmlFor="currentPassword">Current Password <span className="required">*</span></label>
+                      <label htmlFor="currentPassword">Current Password <span className="required"></span></label>
                       <input
                         type="password"
                         id="currentPassword"
@@ -428,7 +429,7 @@ const Settings = () => {
                     </div>
                     
                     <div className="form-group">
-                      <label htmlFor="newPassword">New Password <span className="required">*</span></label>
+                      <label htmlFor="newPassword">New Password <span className="required"></span></label>
                       <input
                         type="password"
                         id="newPassword"
@@ -461,7 +462,7 @@ const Settings = () => {
                     </div>
                     
                     <div className="form-group">
-                      <label htmlFor="confirmPassword">Confirm New Password <span className="required">*</span></label>
+                      <label htmlFor="confirmPassword">Confirm New Password <span className="required"></span></label>
                       <input
                         type="password"
                         id="confirmPassword"

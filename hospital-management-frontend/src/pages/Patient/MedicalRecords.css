@@ -145,136 +145,197 @@
 
 .records-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .record-card {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
   transition: all 0.3s ease;
-  border: 1px solid #e2e8f0;
+  width: 100%;
+  border: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  position: relative;
 }
 
 .record-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Different border colors based on record type */
+.record-card.type-diagnosis {
+  border-left: 4px solid #1565c0;
+}
+
+.record-card.type-prescription {
+  border-left: 4px solid #2e7d32;
+}
+
+.record-card.type-lab {
+  border-left: 4px solid #e65100;
 }
 
 .record-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 15px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #e2e8f0;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #f8fafc;
   width: 100%;
+  position: relative;
 }
 
 .record-header h3 {
   margin: 0;
-  font-size: 18px;
-  color: #2c3e50;
+  font-size: 0.8rem;
+  color: #2d3748;
   font-weight: 600;
+  letter-spacing: -0.01em;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 10px;
 }
 
 .record-type {
-  padding: 4px 8px;
+  padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .type-diagnosis {
-  background: #e3f2fd;
-  color: #1976d2;
+  background-color: rgba(21, 101, 192, 0.1);
+  color: #1565c0;
 }
 
 .type-prescription {
-  background: #e8f5e9;
+  background-color: rgba(46, 125, 50, 0.1);
   color: #2e7d32;
 }
 
 .type-lab {
-  background: #fff3e0;
-  color: #f57c00;
+  background-color: rgba(230, 81, 0, 0.1);
+  color: #e65100;
+}
+
+.record-content {
+  padding: 0.6rem 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: white;
+}
+
+.record-content:last-child {
+  border-bottom: none;
 }
 
 .record-details {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   flex: 1;
   width: 100%;
 }
 
 .detail-item {
-  margin-bottom: 10px;
-  background-color: #f8fafc;
-  padding: 8px 12px;
-  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  background-color: white;
 }
 
-.detail-item .label {
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
+  margin-right: 0.25rem;
+}
+
+.detail-value {
+  font-size: 0.8rem;
+  color: #333;
   font-weight: 600;
-  color: #4a5568;
-  margin-right: 8px;
-  display: inline-block;
-  min-width: 80px;
+}
+
+/* Type-specific button styles */
+.type-diagnosis .record-type {
+  color: #1565c0;
+}
+
+.type-prescription .record-type {
+  color: #2e7d32;
+}
+
+.type-lab .record-type {
+  color: #e65100;
 }
 
 .record-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 15px;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  justify-content: flex-end;
   width: 100%;
 }
 
 .view-btn,
 .download-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-size: 0.85rem;
+  min-width: 100px;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  flex: 1;
-  min-width: 160px;
-  max-width: 200px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .view-btn {
-  background-color: #edf2f7;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
+  background-color: var(--primary-color, #0077b6);
+  color: white;
+  border: 1px solid var(--primary-color, #0077b6);
 }
 
 .view-btn:hover {
-  background-color: #e2e8f0;
-  color: #2d3748;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  background-color: #0066a4;
+  border-color: #0066a4;
+  box-shadow: 0 2px 4px rgba(0, 119, 182, 0.2);
 }
 
 .download-btn {
-  background-color: #f7fafc;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
+  background-color: transparent;
+  color: #28a745;
+  border: 1px solid #28a745;
 }
 
 .download-btn:hover {
-  background-color: #edf2f7;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  background-color: #28a745;
+  color: white;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
 }
 
 .full-width {
@@ -507,10 +568,29 @@
 }
 
 /* Specific styles for the diagnosis and prescription summaries */
+.record-summary {
+  padding: 0.85rem 0;
+  margin-top: 0.5rem;
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 0.5rem 0;
+  font-weight: 500;
+}
+
+.summary-text {
+  margin: 0;
+  color: #333;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
 .diagnosis-summary {
-  margin-top: 12px;
+  margin-top: 8px;
   padding: 12px;
-  background-color: #ebf8ff;
+  /* background-color: #ebf8ff; */
   border-radius: 6px;
   border-left: 3px solid #63b3ed;
   max-height: 80px;
@@ -518,13 +598,14 @@
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
 .prescription-summary {
-  margin-top: 12px;
+  margin-top: 8px;
   padding: 12px;
-  background-color: #e6fffa;
+  /* background-color: #e6fffa; */
   border-radius: 6px;
   border-left: 3px solid #38b2ac;
   max-height: 80px;
@@ -532,6 +613,7 @@
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
@@ -560,6 +642,33 @@
 
 .notes-btn:hover {
   background-color: #e9d8fd;
+}
+
+/* New styles for doc-info, department, and record-date */
+.doc-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.doc-info h3 {
+  margin: 0 0 0.125rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.department {
+  color: #666;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.record-date {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
 }
 
 /* Responsive Design */
@@ -675,4 +784,19 @@
 @keyframes modalFadeIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
+}
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  height: 100%;
+}
+
+.detail-icon {
+  font-size: 1rem;
+  color: var(--primary-color, #0077b6);
+  margin-right: 0.5rem;
+  width: 18px;
+  text-align: center;
 }

@@ -166,14 +166,19 @@
 .error-message {
   padding: 1rem;
   margin-bottom: 1.5rem;
-  border-radius: 12px;
+  border-radius: 8px;
   background-color: #fff5f5;
-  border: 1px solid rgba(245, 101, 101, 0.3);
+  border-left: 4px solid #e53e3e;
+  border-top: 1px solid rgba(245, 101, 101, 0.3);
+  border-right: 1px solid rgba(245, 101, 101, 0.3);
+  border-bottom: 1px solid rgba(245, 101, 101, 0.3);
   color: #c53030;
   font-size: 0.9375rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 0 2px 5px rgba(229, 62, 62, 0.1);
 }
 
 .success-message {

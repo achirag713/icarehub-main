@@ -369,6 +369,75 @@ namespace HospitalManagement.API.Controllers
             }
         }
 
+        // New endpoints for dashboard charts
+        [HttpGet("chart-data")]
+        public async Task<IActionResult> GetChartData()
+        {
+            try
+            {
+                // 1. Get appointment status distribution
+                var scheduledAppointments = await _context.Appointments
+                    .Where(a => a.Status == AppointmentStatus.Scheduled)
+                    .CountAsync();
+                    
+                var completedAppointments = await _context.Appointments
+                    .Where(a => a.Status == AppointmentStatus.Completed)
+                    .CountAsync();
+                    
+                var cancelledAppointments = await _context.Appointments
+                    .Where(a => a.Status == AppointmentStatus.Cancelled)
+                    .CountAsync();
+
+                // 2. Get patient gender distribution
+                var malePatients = await _context.Patients
+                    .Where(p => p.Gender.ToLower() == "male")
+                    .CountAsync();
+                    
+                var femalePatients = await _context.Patients
+                    .Where(p => p.Gender.ToLower() == "female")
+                    .CountAsync();
+                    
+                var otherPatients = await _context.Patients
+                    .Where(p => p.Gender.ToLower() != "male" && p.Gender.ToLower() != "female")
+                    .CountAsync();
+
+                // 3. Get weekly appointment distribution
+                var today = TimeUtility.NowIst();
+                var startOfWeek = today.AddDays(-(int)today.DayOfWeek); // Start from Sunday
+                
+                var appointmentsByDay = new int[7];
+                
+                for (int i = 0; i < 7; i++)
+                {
+                    var dayDate = startOfWeek.AddDays(i);
+                    appointmentsByDay[i] = await _context.Appointments
+                        .Where(a => a.AppointmentDate.Date == dayDate.Date)
+                        .CountAsync();
+                }
+
+                return Ok(new
+                {
+                    appointmentsByStatus = new
+                    {
+                        scheduled = scheduledAppointments,
+                        completed = completedAppointments,
+                        cancelled = cancelledAppointments
+                    },
+                    patientsByGender = new
+                    {
+                        male = malePatients,
+                        female = femalePatients,
+                        other = otherPatients
+                    },
+                    appointmentsByDay = appointmentsByDay
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         // Helper method to calculate age from date of birth
         private int CalculateAge(DateTime dateOfBirth)
         {

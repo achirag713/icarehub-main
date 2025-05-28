@@ -50,16 +50,14 @@ builder.Services.AddScoped<AppointmentService>();
 
 // Register OTP and email services
 builder.Services.AddMemoryCache();
-builder.Services.AddScoped<OtpService>();
 
-// Register email configuration
-builder.Configuration.GetSection("EmailSettings").Bind(new
-{
-    FromEmail = "your-email@gmail.com",
-    FromPassword = "your-app-password",
-    SmtpHost = "smtp.gmail.com",
-    SmtpPort = 587
-});
+// Configure email settings
+builder.Services.Configure<HospitalManagement.API.Models.EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+    
+// Register email service
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<OtpService>();
 
 // Configure CORS
 builder.Services.AddCors(options =>

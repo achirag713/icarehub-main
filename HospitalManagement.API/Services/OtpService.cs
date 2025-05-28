@@ -1,23 +1,23 @@
+using System;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
-using System.Net.Mail;
-using System.Net;
+using System.Threading.Tasks;
 
 namespace HospitalManagement.API.Services
 {
     public class OtpService
     {
         private readonly IMemoryCache _cache;
-        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
         private readonly TimeSpan _otpLifetime = TimeSpan.FromMinutes(10);
         private const string OTP_PREFIX = "OTP_";
         private const string VERIFIED_PREFIX = "VERIFIED_";
 
-        public OtpService(IMemoryCache cache, IConfiguration configuration)
+        public OtpService(IMemoryCache cache, IEmailService emailService)
         {
             _cache = cache;
-            _configuration = configuration;
+            _emailService = emailService;
         }
 
         public string GenerateOtp()
@@ -26,7 +26,7 @@ namespace HospitalManagement.API.Services
             return RandomNumberGenerator.GetInt32(100000, 999999).ToString();
         }
 
-        public async Task<bool> SendOtpAsync(string email, string purpose)
+        public async Task<(bool Success, string ErrorMessage)> SendOtpAsync(string email, string purpose)
         {
             try
             {
@@ -36,14 +36,48 @@ namespace HospitalManagement.API.Services
                 // Store OTP in cache with expiration
                 _cache.Set(cacheKey, otp, _otpLifetime);
 
-                // Send email
-                await SendEmailAsync(email, otp, purpose);
+                // Prepare email content
+                string subject = purpose == "registration" 
+                    ? "iCareHub Registration OTP" 
+                    : "iCareHub Password Reset OTP";
                 
-                return true;
+                string body = $@"
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                        .otp-box {{ background-color: #f5f5f5; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; letter-spacing: 5px; }}
+                        .footer {{ font-size: 12px; color: #666; margin-top: 20px; }}
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h2>Your iCareHub {purpose} OTP</h2>
+                        <p>Please use the following OTP to complete your {purpose}:</p>
+                        <div class='otp-box'>{otp}</div>
+                        <p>This OTP is valid for 10 minutes.</p>
+                        <p>If you didn't request this OTP, please ignore this email.</p>
+                        <div class='footer'>
+                            This is an automated message. Please do not reply to this email.
+                        </div>
+                    </div>
+                </body>
+                </html>";
+
+                // Send email using SendGrid
+                var (success, errorMessage) = await _emailService.SendEmailAsync(email, subject, body);
+                
+                if (!success)
+                {
+                    return (false, $"Failed to send OTP email: {errorMessage}");
+                }
+                
+                return (true, null);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                return (false, $"Error sending OTP: {ex.Message}");
             }
         }
 
@@ -63,54 +97,16 @@ namespace HospitalManagement.API.Services
             }
             
             return false;
-        }
-
-        public bool IsOtpVerified(string email, string purpose)
+        }        public bool IsOtpVerified(string email, string purpose)
         {
             var verifiedKey = $"{VERIFIED_PREFIX}{email}_{purpose}";
             return _cache.TryGetValue(verifiedKey, out bool verified) && verified;
         }
-
+        
         public void ClearOtpVerification(string email, string purpose)
         {
             var verifiedKey = $"{VERIFIED_PREFIX}{email}_{purpose}";
             _cache.Remove(verifiedKey);
-        }
-
-        private async Task SendEmailAsync(string toEmail, string otp, string purpose)
-        {
-            var emailSettings = _configuration.GetSection("EmailSettings");
-            var fromEmail = emailSettings["FromEmail"] ?? throw new Exception("FromEmail not configured");
-            var fromPassword = emailSettings["FromPassword"] ?? throw new Exception("FromPassword not configured");
-            var smtpHost = emailSettings["SmtpHost"] ?? throw new Exception("SmtpHost not configured");
-            var smtpPortStr = emailSettings["SmtpPort"] ?? throw new Exception("SmtpPort not configured");
-            
-            if (!int.TryParse(smtpPortStr, out var smtpPort))
-            {
-                throw new Exception("Invalid SmtpPort configuration");
-            }
-
-            var subject = purpose == "registration" 
-                ? "Complete Your iCareHub Registration" 
-                : "Reset Your iCareHub Password";
-
-            var body = purpose == "registration"
-                ? $"Your registration OTP is: {otp}. This code will expire in 10 minutes."
-                : $"Your password reset OTP is: {otp}. This code will expire in 10 minutes.";
-
-            using var message = new MailMessage(
-                from: new MailAddress(fromEmail),
-                to: new MailAddress(toEmail));
-            
-            message.Subject = subject;
-            message.Body = body;
-            message.IsBodyHtml = true;
-
-            using var client = new SmtpClient(smtpHost, smtpPort);
-            client.EnableSsl = true;
-            client.Credentials = new NetworkCredential(fromEmail, fromPassword);
-
-            await client.SendMailAsync(message);
         }
     }
 }

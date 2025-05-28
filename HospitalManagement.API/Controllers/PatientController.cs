@@ -292,6 +292,139 @@ namespace HospitalManagement.API.Controllers
         }
 
         [Authorize(Roles = "Patient")]
+        [HttpGet("notification-preferences")]
+        public async Task<IActionResult> GetNotificationPreferences()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var patient = await _context.Patients
+                .Include(p => p.NotificationPreferences)
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (patient == null)
+                return NotFound("Patient not found");
+
+            if (patient.NotificationPreferences == null)
+            {
+                return Ok(new NotificationPreferencesDto
+                {
+                    AppointmentReminders = false,
+                    TestResults = false,
+                    PrescriptionUpdates = false,
+                    BillingAlerts = false
+                });
+            }
+
+            return Ok(new NotificationPreferencesDto
+            {
+                AppointmentReminders = patient.NotificationPreferences.AppointmentReminders,
+                TestResults = patient.NotificationPreferences.TestResults,
+                PrescriptionUpdates = patient.NotificationPreferences.PrescriptionUpdates,
+                BillingAlerts = patient.NotificationPreferences.BillingAlerts
+            });
+        }
+
+        // Add new endpoint to get chart data for patient dashboard
+        [Authorize(Roles = "Patient")]
+        [HttpGet("chart-data")]
+        public async Task<IActionResult> GetPatientChartData()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim))
+                {
+                    return Unauthorized("User ID claim not found");
+                }
+
+                var userId = int.Parse(userIdClaim);
+                
+                // Get the current patient
+                var patient = await _context.Patients
+                    .Include(p => p.User)
+                    .Include(p => p.Appointments)
+                    .Include(p => p.MedicalRecords)
+                    .FirstOrDefaultAsync(p => p.User.Id == userId);
+
+                if (patient == null)
+                {
+                    return NotFound("Patient not found");
+                }
+
+                // Get all appointments for this patient
+                var allAppointments = await _context.Appointments
+                    .Where(a => a.PatientId == patient.Id)
+                    .ToListAsync();
+
+                // Count appointments by status
+                var pendingAppointments = allAppointments.Count(a => a.Status == AppointmentStatus.Scheduled);
+                var completedAppointments = allAppointments.Count(a => a.Status == AppointmentStatus.Completed);
+                var cancelledAppointments = allAppointments.Count(a => a.Status == AppointmentStatus.Cancelled);
+
+                // Count appointments by month (last 6 months)
+                var today = DateTime.Today;
+                var sixMonthsAgo = today.AddMonths(-6);
+                
+                var appointmentsByMonth = new int[6];
+                for (int i = 0; i < 6; i++)
+                {
+                    var monthDate = today.AddMonths(-i);
+                    var startOfMonth = new DateTime(monthDate.Year, monthDate.Month, 1);
+                    var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+                    
+                    appointmentsByMonth[5-i] = allAppointments.Count(a => 
+                        a.AppointmentDate >= startOfMonth && 
+                        a.AppointmentDate <= endOfMonth);
+                }
+
+                // Get last 6 months names for labels
+                var monthNames = new string[6];
+                for (int i = 0; i < 6; i++)
+                {
+                    monthNames[5-i] = today.AddMonths(-i).ToString("MMM");
+                }
+
+                // Get medical records count by category
+                var allMedicalRecords = await _context.MedicalRecords
+                    .Where(mr => mr.PatientId == patient.Id)
+                    .ToListAsync();
+
+                // Categorize medical records based on the actual fields available
+                var prescriptions = allMedicalRecords.Count(mr => !string.IsNullOrEmpty(mr.Prescription));
+                var labResults = allMedicalRecords.Count(mr => !string.IsNullOrEmpty(mr.LabResults));
+                var diagnoses = allMedicalRecords.Count(mr => !string.IsNullOrEmpty(mr.Diagnosis));
+                var otherRecords = allMedicalRecords.Count(mr => 
+                    string.IsNullOrEmpty(mr.Prescription) && 
+                    string.IsNullOrEmpty(mr.LabResults) && 
+                    string.IsNullOrEmpty(mr.Diagnosis));
+
+                // Get billing data for payment history
+                var allBills = await _context.Bills
+                    .Where(b => b.PatientId == patient.Id)
+                    .OrderByDescending(b => b.BillDate)
+                    .ToListAsync();
+
+                var paidBills = allBills.Count(b => b.Status == BillStatus.Paid);
+                var pendingBills = allBills.Count(b => b.Status == BillStatus.Pending);
+
+                // Calculate total amount paid and pending
+                var totalPaid = allBills.Where(b => b.Status == BillStatus.Paid).Sum(b => b.Amount);
+                var totalPending = allBills.Where(b => b.Status == BillStatus.Pending).Sum(b => b.Amount);                return Ok(new
+                {
+                    appointmentsByStatus = new
+                    {
+                        scheduled = pendingAppointments,
+                        completed = completedAppointments,
+                        cancelled = cancelledAppointments
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [Authorize(Roles = "Patient")]
         [HttpPut("notification-preferences")]
         public async Task<IActionResult> UpdateNotificationPreferences([FromBody] NotificationPreferencesDto model)
         {

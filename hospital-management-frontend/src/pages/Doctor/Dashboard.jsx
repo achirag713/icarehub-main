@@ -6,7 +6,13 @@ import { formatDate } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
 import { doctor } from "../../services/api";
 import { useLoading } from "../../context/LoadingContext";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie, Doughnut } from 'react-chartjs-2';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import "./Dashboard.css";
+
+// Register Chart.js components
+ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartDataLabels);
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
@@ -528,7 +534,7 @@ const DoctorDashboard = () => {
             {dashboardData.patients && dashboardData.patients.length > 0 ? (
               <>
                 <ul className="patient-list">
-                  {dashboardData.patients.slice(0, 5).map((patient) => {
+                  {dashboardData.patients.slice(0, 1).map((patient) => {
                     // Debug the patient object structure
                     console.log("Patient object structure:", patient);
 
@@ -555,19 +561,19 @@ const DoctorDashboard = () => {
 
                     return (
                       <li key={patient.id} className="patient-item">
-                        <div className="patient-info">
+                        
                           
                             <ul>
                               <li>
-                                <strong>Name:</strong> {patientName}
+                              <strong>Name:</strong> {patientName}
                               </li>
                               <li>
-                                <strong>Email:</strong> {patientEmail}
+                                <strong>Email:</strong>    {patientEmail}
                               </li>
                             </ul>
                             
                           
-                        </div>
+                        
                       </li>
                     );
                   })}
@@ -591,150 +597,6 @@ const DoctorDashboard = () => {
           </div>
         </div>
 
-        <div className="bottom-cards-grid">
-          
-
-          {/* Next Appointment Card */}
-          <div className="dashboard-card">
-            <h3>
-              <FaCalendarCheck style={{ marginRight: "10px" }} />
-              Next Appointment
-            </h3>
-            {/* Find the next upcoming appointment */}
-            {dashboardData.appointments &&
-            dashboardData.appointments.length > 0 ? (
-              (() => {
-                const now = new Date();
-                const upcomingAppointments = dashboardData.appointments
-                  .filter((appointment) => appointment.status !== 2 && appointment.status !== 1) // Exclude cancelled appointments
-                  .sort(
-                    (a, b) =>
-                      new Date(a.appointmentDate) - new Date(b.appointmentDate)
-                  );
-
-                const nextAppointment = upcomingAppointments.find(
-                  (apt) => new Date(apt.appointmentDate) >= new Date()
-                );
-
-                if (nextAppointment) {
-                  // Calculate days until the appointment
-                  const appointmentDate = new Date(nextAppointment.date);
-                  const today = new Date();
-                  const diffTime = Math.abs(appointmentDate - today);
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                  // Debug the next appointment object structure
-                  console.log("Next appointment object:", nextAppointment);
-
-                  // Find patient by ID from the patients list
-                  const patientId = nextAppointment.patientId;
-                  console.log("Looking for patient with ID:", patientId);
-
-                  // Find patient in the dashboardData.patients array
-                  const patient = dashboardData.patients.find(
-                    (p) => p.id === patientId
-                  );
-                  console.log("Found patient:", patient);
-
-                  // Get patient name with fallbacks
-                  let patientName = "Unknown Patient";
-
-                  if (patient) {
-                    patientName =
-                      patient.name ||
-                      (patient.firstName && patient.lastName
-                        ? `${patient.firstName} ${patient.lastName}`
-                        : null) ||
-                      patient.firstName ||
-                      patient.lastName ||
-                      "Unknown Patient";
-                  } else if (nextAppointment.patientName) {
-                    patientName = nextAppointment.patientName;
-                  }
-
-                  // Format the appointment date with fallbacks
-                  const formattedAppointmentDate =
-                    nextAppointment.date || nextAppointment.appointmentDate;
-
-                  // Format the time with fallbacks
-                  const timeDisplay =
-                    (nextAppointment.displayTime
-                      ? nextAppointment.displayTime
-                      : null) ||
-                    (nextAppointment.time
-                      ? new Date(
-                          `2000-01-01T${nextAppointment.time}`
-                        ).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          hour12: true,
-                        })
-                      : formattedAppointmentDate
-                      ? new Date(formattedAppointmentDate).toLocaleTimeString(
-                          [],
-                          { hour: "2-digit", minute: "2-digit", hour12: true }
-                        )
-                      : "N/A");
-
-                  return (
-                    <>
-                      <ul className="appointment-list">
-                        <li className="appointment-item">
-                          <div className="appointment-info">
-                            <strong>Patient:</strong> {patientName}
-                            <br />
-                            <strong>Date:</strong>{" "}
-                            {appointmentDate
-                              ? formatDate(appointmentDate)
-                              : "N/A"}
-                            <br />
-                            <strong>Time:</strong> {timeDisplay}
-                            <br />
-                            <strong>Purpose:</strong>{" "}
-                            {nextAppointment.purpose ||
-                              nextAppointment.reason ||
-                              "Consultation"}
-                          </div>
-                          
-                        </li>
-                        <li>
-                          <div className="appointment-actions">
-                            <button
-                              className="btn-view"
-                              onClick={() =>
-                                handleViewAppointmentDetails(nextAppointment.id)
-                              }
-                            >
-                              View All Appointments
-                            </button>
-                          </div>
-                        </li>
-                      </ul>
-                    </>
-                  );
-                }
-
-                return (
-                  <div className="empty-state">
-                    <div className="empty-state-icon">📅</div>
-                    <p className="empty-state-message">
-                      No upcoming appointments
-                    </p>
-                    <p className="empty-state-submessage">
-                      Your schedule is clear for now
-                    </p>
-                  </div>
-                );
-              })()
-            ) : (
-              <div className="empty-state">
-                <div className="empty-state-icon">📅</div>
-                <p className="empty-state-message">No appointments scheduled</p>
-                <p className="empty-state-submessage">Your calendar is empty</p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </DoctorLayout>
   );
