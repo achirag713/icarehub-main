@@ -24,7 +24,7 @@ This solution consists of two main components:
 
 - .NET SDK 8.0 or later
 - Node.js (v16 or later) and npm
-- SQL Server (or compatible database)
+- MySQL Server (or compatible database)
 
 ### Backend Setup
 
@@ -36,7 +36,7 @@ Change the global.json file according to your .net sdk
 
 2. Restore packages:
 ```
-dotnet restore
+dotnet restore and dotnet build
 ```
 
 3. Update database connection string in `appsettings.json` or using User Secrets (copy the appsettings.example.json file into appsettings.json with your credentials)
